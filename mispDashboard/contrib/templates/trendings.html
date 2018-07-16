@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>MISP Trendings</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+    <!-- LeafLet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/leaflet.css') }}">
+    <script src="{{ url_for('static', filename='js/leaflet.js') }}"></script>
+
+    <!-- jQuery -->
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <!-- jQuery flot -->
+    <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.pie.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.resize.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.time.js') }}"></script>
+    <!-- Bootstrap Core JavaScript -->
+    <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap3-typeahead.min.js') }}"></script>
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="text/css">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-jvectormap-2.0.3.css') }}" type="text/css" media="screen"/>
+    <script src="{{ url_for('static', filename='js/jquery-jvectormap-2.0.3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery-jvectormap-world-mill.js') }}"></script>
+    <link href="{{ url_for('static', filename='css/jquery-ui.min.css') }}" rel="stylesheet" type="text/css" />
+    <script src="{{ url_for('static', filename='js/jquery-ui.min.js') }}"></script>
+
+    <link href="{{ url_for('static', filename='css/vis.min.css') }}" rel="stylesheet" type="text/css" />
+    <script src="{{ url_for('static', filename='js/vis.min.js') }}"></script>
+
+</head>
+
+<style>
+
+ .highlightDay {
+     background-color: #edc240;
+     box-shadow: black 0px 0px 2px;
+ }
+
+ .tagElem {
+     display: inline-block;
+     padding: 2px 4px;
+     font-size: 12px;
+     font-weight: bold;
+     line-height: 14px;
+     border-radius: 3px;
+     box-shadow: 3px 3px 3px #888888;
+ }
+
+ .panel {
+     margin-bottom: 10px;
+ }
+
+ .panel-body {
+     padding: 0px;
+ }
+
+.col-lg-6 {
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+.leftSepa {
+    border-left-color: rgb(221, 221, 221);
+    border-left-style: solid;
+    border-left-width: 2px;
+    padding-left: 8px;
+}
+
+.textTopHeader {
+    height: 50px;
+    text-align: center;
+    margin-left: 8px;
+    float: left;
+    padding-top: 9px;
+}
+
+.center {
+  display:block;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+small {
+    font-size: 100%;
+    font-weight: bold;
+}
+
+</style>
+
+<body>
+
+    <div id="wrapper">
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0; padding-left: 15px;">
+            <div class="navbar-header">
+                <img src="{{ url_for('static', filename='pics/MISP.png') }}" alt="MISP" style="float: left; height: 40px; margin-top: 5px;"><a class="navbar-brand dropdown-toggle" data-toggle="dropdown" href="#">MISP Trendings
+                    <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                      <li><a href="{{ url_for('index') }}">MISP Live Dashboard</a></li>
+                      <li><a href="{{ url_for('geo') }}">MISP Geolocalisation</a></li>
+                      <li><a href="{{ url_for('contrib') }}">MISP Contributors</a></li>
+                      <li><a href="{{ url_for('users') }}">MISP Users</a></li>
+                      <li><a href="{{ url_for('trendings') }}">MISP Trendings</a></li>
+                    </ul>
+                <div class='leftSepa textTopHeader'>
+                    <strong>Max display:
+                        <select id="num_selector">
+                            <option value="1" {% if maxNum == 1 %}selected=""{% endif %}>1</option>
+                            <option value="3" {% if maxNum == 3 %}selected=""{% endif %}>3</option>
+                            <option value="5" {% if maxNum == 5 %}selected=""{% endif %}>5</option>
+                            <option value="10" {% if maxNum == 10 %}selected=""{% endif %}>10</option>
+                            <option value="15" {% if maxNum == 15 %}selected=""{% endif %}>15</option>
+                            <option value="20" {% if maxNum == 20 %}selected=""{% endif %}>20</option>
+                        </select>
+                    </strong>
+                </div>
+                <div class='leftSepa textTopHeader'>
+                    <strong>Date:
+                        <input type="text" id="datepickerStart" size="30" style="margin-bottom: 5px;">
+                        <strong> to </strong>
+                        <input type="text" id="datepickerEnd" size="30" style="margin-bottom: 5px;">
+                    </strong>
+                </div>
+            </div>
+            <!-- /.navbar-header -->
+
+        </nav>
+
+        <!-- Page Content -->
+        <div id="page-wrapper" style="margin: 0px; padding: 0px;">
+            <div class="container-fluid">
+                <div class="row">
+                    <div style="height: 10px;"></div>
+
+                    <div class="col-lg-12">
+                        <div class="col-lg-4">
+                            <div class="panel panel-default" style="">
+                                <div class="panel-heading bg-info" style="font-weight: bold;">
+                                    <b>Most active events</b>
+                                    <input type="text" id="typeaheadEvent" data-provide="typeahead" size="20" style="margin-bottom: 5px; float:right;" placeholder="Enter an event">
+                                </div>
+                                <div id="panelbody" class="panel-body" style="">
+                                    <div id="eventPie" style="width:100%; height: 34vh;"></div>
+                                    <div id="eventLine" style="width:100%; height: 27vh;"></div>
+                                </div>
+                            </div><!-- /.panel-body -->
+                        </div>
+
+                        <div class="col-lg-3">
+                            <div class="panel panel-default" style="">
+                                <div class="panel-heading bg-info" style="font-weight: bold;">
+                                    <b>Most active categories</b>
+                                    <input type="text" id="typeaheadCateg" data-provide="typeahead" size="20" style="margin-bottom: 5px; float:right;" placeholder="Enter a category">
+                                </div>
+                                <div id="panelbody" class="panel-body" style="">
+                                    <div id="categPie" style="width:100%; height: 34vh;"></div>
+                                    <div id="categLine" style="width:100%; height: 27vh;"></div>
+                                </div>
+                            </div><!-- /.panel-body -->
+                        </div>
+
+                        <div class="col-lg-5">
+                            <div class="panel panel-default" style="">
+                                <div class="panel-heading bg-info" style="font-weight: bold;">
+                                    <b>Most popular tags</b>
+                                    <input type="text" id="typeaheadTag" data-provide="typeahead" size="20" style="margin-bottom: 5px; float:right;" placeholder="Enter a tag">
+                                </div>
+                                <div id="panelbody" class="panel-body" style="">
+                                    <div id="tagPie" style="width:100%; height: 34vh;"></div>
+                                    <div id="tagLine" style="width:100%; height: 27vh;"></div>
+                                </div>
+                            </div><!-- /.panel-body -->
+                        </div>
+
+                    </div><!-- /.col-lg-12 -->
+                    <div class="col-lg-12">
+                        <div class="col-lg-6">
+                            <div class="panel panel-default" style="">
+                                <div class="panel-heading bg-info" style="font-weight: bold;">
+                                    <b>Sightings</b>
+                                </div>
+                                <div id="panelbody" class="panel-body" style="">
+                                    <div id="sightingLine" style="width:100%; height: 20vh;"></div>
+                                </div>
+                            </div><!-- /.panel-body -->
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="panel panel-default" style="">
+                                <div class="panel-heading bg-info" style="font-weight: bold;">
+                                    <b>Discussion</b>
+                                </div>
+                                <div id="panelbody" class="panel-body" style="">
+                                    <div id="discussionLine" style="width:100%; height: 20vh;"></div>
+                                </div>
+                            </div><!-- /.panel-body -->
+                        </div>
+                    </div><!-- /.col-lg-12 -->
+
+                    <div class="col-lg-12">
+                        <div class="panel panel-default" style="">
+                            <div class="panel-heading" style="font-weight: bold;">
+                                <b>Timeline:</b>
+                                <select id="timeline_selector">
+                                        <option value="events" selected="">Events</option>
+                                        <option value="categs">Categories</option>
+                                        <option value="tags">Tags</option>
+                                </select>
+                            </div>
+                            <div class="panel-body" style="">
+                                <div id="timeline" style="width:100%; height: 100%;"></div>
+                            </div>
+                        </div>
+                    </div><!-- /.col-lg-12 -->
+
+                </div><!-- /.row -->
+
+            </div> <!-- /.container-fluid -->
+
+        </div>
+        <!-- /#page-wrapper -->
+
+    </div>
+<!-- /#wrapper -->
+
+    <!-- Index -->
+    <script>
+        /* URL */
+        var urlIconCalendar = "{{ url_for('static', filename='pics/calendar.gif') }}";
+        var url_currentPage = "{{ url_for('trendings') }}";
+        var url_getTrendingEvent = "{{ url_for('getTrendingEvents') }}";
+        var url_getTrendingCateg = "{{ url_for('getTrendingCategs') }}";
+        var url_getTrendingTag = "{{ url_for('getTrendingTags') }}";
+        var url_getTrendingSightings = "{{ url_for('getTrendingSightings') }}";
+        var url_getTrendingDisc = "{{ url_for('getTrendingDisc') }}";
+        var url_getGenericTrendingOvertime = "{{ url_for('getGenericTrendingOvertime') }}";
+
+        var url_getTypeaheadData = "{{ url_for('getTypeaheadData') }}";
+        var url_misp = "{{ url_misp_event }}";
+
+        /* DATA FROM CONF */
+
+    </script>
+
+    <script src="{{ url_for('static', filename='js/trendings.js') }}"></script>
+
+</body>
+
+</html>

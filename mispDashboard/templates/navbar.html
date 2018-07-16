@@ -1,0 +1,18 @@
+{% macro checkActive(endpoint) -%}
+    {% if request.endpoint == endpoint %}active{% endif %}
+{%- endmacro %}
+<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 10px; padding-left: 15px;">
+    <div class="navbar-header">
+        <img src="{{ url_for('static', filename='pics/MISP.png') }}" alt="MISP" style="float: left; height: 40px; margin-top: 5px;"><a class="navbar-brand dropdown-toggle" data-toggle="dropdown" href="#"> {% set curPath = request.endpoint.split('.') %} {{ curPath[0] | title }}
+            <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="{{ url_for('live.index') }}" class="{{ checkActive('live.index') }}"    >MISP Live Dashboard</a></li>
+              <li><a href="{{ url_for('live.index') }}" class="{{ checkActive('geo.index') }}"     >MISP Geolocalisation</a></li>
+              <li><a href="{{ url_for('live.index') }}" class="{{ checkActive('contrib.index') }}" >MISP Contributors</a></li>
+              <li><a href="{{ url_for('live.index') }}" class="{{ checkActive('users.index') }}"   >MISP Users</a></li>
+              <li><a href="{{ url_for('live.index') }}" class="{{ checkActive('trends.index') }}"  >MISP Trendings</a></li>
+              <li><a href="{{ url_for('live.index') }}" class="{{ checkActive('custom.index') }}"  >MISP Custom</a></li>
+           </ul>
+    </div>
+    {% block extendedTopNavbar %}{% endblock %}
+</nav>

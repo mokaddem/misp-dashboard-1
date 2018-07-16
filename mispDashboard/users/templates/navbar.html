@@ -1,0 +1,14 @@
+<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 10px; padding-left: 15px;">
+    <div class="navbar-header">
+        <img src="{{ url_for('static', filename='pics/MISP.png') }}" alt="MISP" style="float: left; height: 40px; margin-top: 5px;"><a class="navbar-brand dropdown-toggle" data-toggle="dropdown" href="#">MISP Users
+            <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+              <li><a href="{{ url_for('index') }}">MISP Live Dashboard</a></li>
+              <li><a href="{{ url_for('geo') }}">MISP Geolocalisation</a></li>
+              <li><a href="{{ url_for('contrib') }}">MISP Contributors</a></li>
+              <li><a href="{{ url_for('users') }}">MISP Users</a></li>
+              <li><a href="{{ url_for('trendings') }}">MISP Trendings</a></li>
+              <li><a href="{{ url_for('custom') }}">MISP Custom</a></li>
+           </ul>
+    </div>
+</nav>

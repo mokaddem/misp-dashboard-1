@@ -1,0 +1,10 @@
+{% extends "base_widget.html" %}
+
+{% block additional_deps %}
+<script src="{{ url_for('led.static', filename='js/led.js') }}"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('led.static', filename='css/led.css') }}">
+{% endblock %}
+
+{% block additional_javascript %}
+new Led("{{ widgetsConfig.uuid }}", {{ widgetsConfig | tojson }});
+{% endblock %}

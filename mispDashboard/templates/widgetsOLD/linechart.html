@@ -1,0 +1,20 @@
+{% block widget_type %}
+
+    {% for js in js_deps %}
+    <script src="{{ url_for('static', filename='js/'+js) }}"></script>
+    {% endfor %}
+    {% for css in css_deps %}
+    <link href="{{ url_for('static', filename='css/'+css) }}" rel="stylesheet">
+    {% endfor %}
+
+    <div id="widget_content_{{ uuid }}"></div>
+
+{% endblock %}
+
+<script>
+    (function() {
+        var id = "#widget_content_{{ uuid }}";
+        var data = $("#widget_{{ uuid }}").data('lineData');
+        $.plot("#"+id, [ data ]);
+    }());
+</script>

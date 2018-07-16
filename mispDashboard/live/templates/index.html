@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Index{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-3">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+            </div>
+            <div id="live_led" class="panel-body">
+            </div>
+        </div>
+    </div>
+    <script>easyWidgetInsert('live_led', {{ widgetsConfig['live_led'] | tojson }})</script>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                </div>
+                <div id="live_widget1" class="panel-body" style="height: 400px;">
+                </div>
+            </div>
+            <script>easyWidgetInsert('live_widget1', {{ widgetsConfig['live_widget1'] | tojson }})</script>
+        </div>
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                </div>
+                <div id="live_widget2" class="panel-body">
+                </div>
+            </div>
+            <script>easyWidgetInsert('live_widget2', {{ widgetsConfig['live_widget2'] | tojson }})</script>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                </div>
+                <div id="live_widget3" class="panel-body">
+                </div>
+            </div>
+            <script>easyWidgetInsert('live_widget3', {{ widgetsConfig['live_widget3'] | tojson }})</script>
+        </div>
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                </div>
+                <div id="live_widget4" class="panel-body">
+                </div>
+            </div>
+            <script>easyWidgetInsert('live_widget4', {{ widgetsConfig['live_widget4'] | tojson }})</script>
+        </div>
+    </div>
+</div>
+{% endblock %}

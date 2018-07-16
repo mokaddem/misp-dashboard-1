@@ -1,0 +1,27 @@
+.led_green {
+    background-color: #ABFF00;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 9px, #89FF00 0 0px 6px;
+}
+
+.led_red {
+    background-color: #F82222;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 9px, #FF0303 0 0px 6px;
+}
+
+.led_orange {
+    background-color: #FFB400;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 9px, #FF9000 0 0px 6px;
+}
+
+.led {
+    margin: auto auto;
+    margin-top: 7.5px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+}
+
+.led-container {
+    text-align: center;
+    display: inline-block;
+}

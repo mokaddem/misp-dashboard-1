@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>MISP Live Dashboard</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/sb-admin-2.css') }}" rel="stylesheet">
+    <!-- LeafLet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/leaflet.css') }}">
+    <script src="{{ url_for('static', filename='js/leaflet.js') }}"></script>
+
+    <!-- jQuery -->
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <!-- jQuery flot -->
+    <script src="{{ url_for('static', filename='js/jquery.flot.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.pie.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery.flot.resize.js') }}"></script>
+    <!-- Bootstrap Core JavaScript -->
+    <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+
+</head>
+
+<style>
+.leaflet-top {
+    position: absolute;
+    z-index: 801;
+    pointer-events: none;
+}
+
+.tagElem {
+    display: inline-block;
+    padding: 2px 4px;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 14px;
+    border-bottom-left-radius: 3px;
+    box-shadow: 3px 3px 3px #888888;
+}
+
+table {
+    overflow-y: scroll;
+}
+
+.led_green {
+    margin: auto auto;
+    margin-top: 7.5px;
+    width: 15px;
+    height: 15px;
+    background-color: #ABFF00;
+    border-radius: 50%;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 9px, #89FF00 0 0px 6px;
+}
+
+.led_red {
+    margin: auto auto;
+    margin-top: 7.5px;
+    width: 15px;
+    height: 15px;
+    background-color: #F82222;
+    border-radius: 50%;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 9px, #FF0303 0 0px 6px;
+}
+
+.led_orange {
+    margin: auto auto;
+    margin-top: 7.5px;
+    width: 15px;
+    height: 15px;
+    background-color: #FFB400;
+    border-radius: 50%;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 9px, #FF9000 0 0px 6px;
+}
+
+.marker_animation {
+  stroke: darkred;
+  position: absolute;
+  opacity: 1;
+  border-radius: 80px;
+  -moz-border-radius: 80px;
+  /* 40px radius, move origin to center */
+  height: 30px;
+  width: 30px;
+  margin: 0px;
+  pointer-events: none; /* dont kill the hover event of markers */
+  -webkit-transform: translateZ(0); /* little trick to force GPU acceleration */
+}
+
+.panel-body {
+  padding: 3px;
+}
+
+.center {
+  display:block;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.leftSepa {
+    border-left-color: rgb(221, 221, 221);
+    border-left-style: solid;
+    border-left-width: 2px;
+    padding-left: 8px;
+}
+
+.textTopHeader {
+    height: 50px;
+    text-align: center;
+    margin-left: 8px;
+    float: left;
+}
+
+small {
+    font-size: 100%;
+    font-weight: bold;
+}
+
+</style>
+
+<body>
+
+    <div id="wrapper">
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0; padding-left: 15px;">
+            <div class="navbar-header">
+                <img src="{{ url_for('static', filename='pics/MISP.png') }}" alt="MISP" style="float: left; height: 40px; margin-top: 5px;"><a class="navbar-brand dropdown-toggle" data-toggle="dropdown" href="#">MISP Live Dashboard
+                    <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                      <li><a href="{{ url_for('index') }}">MISP Live Dashboard</a></li>
+                      <li><a href="{{ url_for('geo') }}">MISP Geolocalisation</a></li>
+                      <li><a href="{{ url_for('contrib') }}">MISP Contributors</a></li>
+                      <li><a href="{{ url_for('users') }}">MISP Users</a></li>
+                      <li><a href="{{ url_for('trendings') }}">MISP Trendings</a></li>
+                    </ul>
+
+                <div id="ledsHolder" style="float: right; height: 50px;"></div>
+            </div>
+            <!-- /.navbar-header -->
+
+        </nav>
+
+        <!-- Page Content -->
+        <div id="page-wrapper" style="margin: 0px; padding: 0px;">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="col-lg-{{ size_dashboard_width[0] }}">
+
+                           <div id="panelOpenMap" class="panel panel-default" style="margin-top: 15px; height: {{ pannelSize[0] }}vh;">
+                            <div class="panel-heading bg-info" style="font-weight: bold;">
+                                <b><a id="textMap1" href="#panelbody">No map </a></b>
+                                <div  style="float: right;">
+                                    <i class="leftSepa" id="txtMapNum">Rotation speed: </i>
+                                     <select id="rotation_wait_time_selector" style="margin-top: -7px;">
+                                      <option value="∞" selected>No rotation</option>
+                                      <option value="{{ rotation_wait_time }}" selected>{{ rotation_wait_time }} sec</option>
+                                      <option value="{{ rotation_wait_time * 2 }}">{{ rotation_wait_time * 2 }} sec</option>
+                                      <option value="{{ rotation_wait_time * 5}}">{{ rotation_wait_time * 5 }} sec</option>
+                                     </select>
+                                    <i class="leftSepa" id="txtMapNum">Zoom level: </i>
+                                     <select id="zoom_selector" style="margin-top: -7px;">
+                                      <option value="{{ zoomlevel + 3 }}">{{ zoomlevel + 3 }}</option>
+                                      <option value="{{ zoomlevel + 2 }}">{{ zoomlevel + 2 }}</option>
+                                      <option value="{{ zoomlevel }}" selected>{{ zoomlevel }}</option>
+                                      <option value="{{ zoomlevel - 2 }}">{{ zoomlevel - 2 }}</option>
+                                      <option value="{{ zoomlevel - 4 }}">{{ zoomlevel - 4 }}</option>
+                                      <option value="{{ zoomlevel - 6 }}">{{ zoomlevel - 6 }}</option>
+                                      <option value="{{ zoomlevel - 8 }}">{{ zoomlevel - 8 }}</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="panelbody" class="panel-body" style="height: 93%;">
+                                 <div id="feedDivMap1" style="width:100%; height: calc({{ pannelSize[0] }}vh - 51px);"></div>
+                            </div>
+                            <!-- /.panel-body -->
+
+                        </div>
+                        <!-- /.panel -->
+                        <div id="panelLineChart"  class="panel panel-default" style="margin-top: 15px; height: {{ pannelSize[1] }}vh;">
+                            <div class="panel-heading">
+                                <i class="fa fa-bar-chart-o fa-fw"></i> <strong>{{ itemToPlot }}</strong> overtime (hours)
+                            </div>
+                            <div id="panelbody" class="panel-body" style="width:100%; height: 100%;">
+                                <div id="feedDiv3" style="width:100%; height: calc(100% - 46px); position: relative;"></div>
+                            </div>
+                        </div>
+
+
+                    </div>
+                    <!-- /.col-lg-6 -->
+                    <!-- /.col-lg-6 -->
+                    <div class="col-lg-{{ size_dashboard_width[1] }}">
+
+                        <div class="panel panel-default" style="margin-top: 15px; height: {{ pannelSize[2] }}vh;">
+                            <div id="panelbody" class="panel-body" style="height: 100%;">
+                                <div id="feedDiv2" style="width:100%; height: 100%; position: relative;"></div>
+                            </div>
+                            <!-- /.panel-body -->
+
+                        </div>
+                        <!-- /.panel -->
+
+                        <div id="panelLogTable" class="panel panel-default" style="height: {{ pannelSize[3] }}vh;">
+                            <div class="panel-heading">
+                                <i class="fa fa-tasks fa-fw"></i> Logs
+                                <div class="pull-right">
+                                    <input id="checkbox_log_info" type="checkbox" value="info"> INFO
+                                    <input id="checkbox_log_warning" type="checkbox" value="warning" checked="true"> WARNING
+                                    <input id="checkbox_log_critical" type="checkbox" value="critical" checked="true"> CRITICAL
+                                </div>
+                            </div>
+                            <div id="divLogTable" class="panel-body" style="height: 98%; padding: 0px;">
+                                <div class="row" style="height: 100%;">
+                                    <div class="col-lg-12" style="height: 100%;">
+                                        <table class="table table-bordered table-hover table-striped" id="table_log">
+                                            <thead id="table_log_head">
+                                            </thead>
+                                            <tbody id="table_log_body">
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- /.col-lg-6 -->
+                </div>
+                <!-- /.row CHART -->
+
+                <div class="row">
+                    <div class="col-lg-12">
+
+                    </div>
+                    <!-- /.col-lg-12 -->
+                </div>
+                <!-- /.row LOGS -->
+
+
+            </div>
+            <!-- /.container-fluid -->
+        </div>
+        <!-- /#page-wrapper -->
+
+    </div>
+<!-- /#wrapper -->
+
+    <!-- Index -->
+    <script>
+        /* URL */
+        var urlForLogs = "{{ url_for('logs') }}";
+        var urlForHead = "{{ url_for('getLogHead') }}";
+        var urlForMaps = "{{ url_for('maps') }}";
+        var linkForDefaultMap = "{{ url_for('static', filename='maps/default.png') }}";
+
+        /* DATA FROM CONF */
+        var itemToPlot = "{{ itemToPlot }}";
+        var graph_log_refresh_rate = {{ graph_log_refresh_rate }};
+        var char_separator = "{{ char_separator }}";
+        var rotation_wait_time = {{ rotation_wait_time }};
+        var max_img_rotation = {{ max_img_rotation }};
+        var hours_spanned = {{ hours_spanned }};
+        var zoomlevel = {{ zoomlevel}};
+
+        var flag_expanded = true;
+
+        $( "#textMap1" ).click(function() {
+            flag_expanded = !flag_expanded;
+            var panelOpenMap = $("#panelOpenMap");
+            var panelLineChart = $("#panelLineChart");
+            var feedDivMap1 = $("#feedDivMap1");
+            var default_openMapHeight = "{{ pannelSize[0] }}vh";
+            var default_lineChartHeight = "{{ pannelSize[1] }}vh";
+            var default_feedDivMap1Height = "{{ pannelSize[1] }}vh - 51px";
+            if(!flag_expanded) {
+                panelLineChart.height("82vh");
+                panelOpenMap.height("41px");
+                feedDivMap1.css('display', 'none');
+            } else {
+                panelLineChart.height(default_lineChartHeight);
+                panelOpenMap.height(default_openMapHeight);
+                feedDivMap1.css('display', '');
+            }
+
+        });
+
+    </script>
+    <script src="{{ url_for('static', filename='js/index/index.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/index/index_lineChart.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/index/index_map.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/index/index_pie.js') }}"></script>
+
+
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css') }}" rel="text/css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-jvectormap-2.0.3.css') }}" type="text/css" media="screen"/>
+    <script src="{{ url_for('static', filename='js/jquery-jvectormap-2.0.3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/jquery-jvectormap-world-mill.js') }}"></script>
+    <script type="text/javascript">
+
+    </script>
+
+</body>
+
+</html>

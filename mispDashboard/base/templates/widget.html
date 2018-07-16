@@ -1,0 +1,28 @@
+{% include 'basic_widget_dependencies.html' %}
+
+<div id="widget_{{ uuid }}"
+data-widgetName="{{ name }}"
+{% for varname, value in data.items() %}
+    data-{{ varname }}="{{ value }}"
+{% endfor %}
+></div>
+
+<div id="wrapper">
+    {% block widget_type %}
+    {% endblock %}
+</div>
+<!-- /#wrapper -->
+
+<script>
+    /* URL */
+
+    /* DATA FROM CONF */
+
+</script>
+
+{% for js in js_deps %}
+    <script src="{{ url_for('static', filename='js/'+js) }}"></script>
+{% endfor %}
+{% for css in css_deps %}
+    <link href="{{ url_for('static', filename='css/'+css) }}" rel="stylesheet">
+{% endfor %}
