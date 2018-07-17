@@ -13,8 +13,7 @@ def index():
                     preData='http://localhost:5004/maps', zoomLevel=3),
                 'live_widget2': generateWidgetConfig('worldmap', 'http://localhost:5004/maps_stream2', name='World map'),
                 'live_widget3': generateWidgetConfig('linechart', 'http://localhost:5004/line', name='Occurences'),
-                # 'live_widget4': generateWidgetConfig('livelog', 'http://localhost:5004/line', name='Live log')
-                'live_widget4': generateWidgetConfig('led', 'http://localhost:5004/led', name='Live log')
+                'live_widget4': generateWidgetConfig('livelog', 'http://localhost:5004/line', name='Live log')
             }
             # itemToPlot=cfg.get('Dashboard', 'item_to_plot'),
             # graph_log_refresh_rate=cfg.getint('Dashboard' ,'graph_log_refresh_rate'),

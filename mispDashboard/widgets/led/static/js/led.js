@@ -1,20 +1,6 @@
-class Led {
-    constructor(container, options) {
-        this.POLLING_FREQUENCY = 3000; // 3s
-        this.STATE_DOWN_THRESHOLD = 15000; // 15s
+var Led = function(container, options) {
 
-        options.container = container;
-
-        this._options = {};
-        this.parseOptions(options)
-        this._ledDOM;
-
-        this.addNewHTMLLed();
-        this.fetchState(this, this.updateState)
-        this.mainLoop(this);
-    }
-
-    parseOptions(options) {
+    this.parseOptions = function(options) {
         var _o = this._options;
         var o = options;
 
@@ -37,9 +23,9 @@ class Led {
         _o.additionalOptions = o.additionalOptions;
 
         return _o;
-    }
+    };
 
-    addNewHTMLLed() {
+    this.addNewHTMLLed = function() {
         var text = document.createElement('b');
         text.innerHTML = this._options.name;
         var led_div = document.createElement('div');
@@ -50,9 +36,9 @@ class Led {
         led_container.appendChild(led_div);
         this._ledDOM = $(led_div);
         this._options.container.append(led_container);
-    }
+    };
 
-    fetchState(that, callback) {
+    this.fetchState = function(that, callback) {
         $.ajax({
             dataType: "json",
             url: this._options.endpoint,
@@ -65,10 +51,10 @@ class Led {
                 callback(that, {last_keepalive: false});
             }
         });
-    }
+    };
 
     // state_object == {last_keepalive: timestamp|false}
-    updateState(that, state_object) {
+    this.updateState = function(that, state_object) {
         var last_keepalive = state_object.last_keepalive;
         var time_diff = Math.abs(new Date().getTime()/1000 - last_keepalive);
 
@@ -81,9 +67,9 @@ class Led {
         } else {
             that.updateDOMState(that, 'not connected');
         }
-    }
+    };
 
-    updateDOMState(that, state) {
+    this.updateDOMState = function(that, state) {
         switch (state) {
             case 'up':
                 that._ledDOM.removeClass("led_red");
@@ -105,14 +91,28 @@ class Led {
                 that._ledDOM.removeClass("led_orange");
                 that._ledDOM.addClass("led_red");
         }
-    }
+    };
 
-    mainLoop(that) {
+    this.mainLoop = function(that) {
         setInterval(function (self) {
             that.fetchState(that, that.updateState)
         }, this._options.pollingFrequency);
-    }
-}
+    };
+
+
+    this.POLLING_FREQUENCY = 3000; // 3s
+    this.STATE_DOWN_THRESHOLD = 15000; // 15s
+
+    options.container = container;
+
+    this._options = {};
+    this.parseOptions(options)
+    this._ledDOM;
+
+    this.addNewHTMLLed();
+    this.fetchState(this, this.updateState);
+    this.mainLoop(this);
+};
 
 
 /*

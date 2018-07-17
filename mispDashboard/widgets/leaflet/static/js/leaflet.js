@@ -65,7 +65,7 @@ var leaflet_widget = function (container, options) {
 
         };
         this.data_source.onopen = function(){
-            console.log('connection is opened. '+that.data_source.readyState);
+            // console.log('connection is opened. '+that.data_source.readyState);
         };
         this.data_source.onerror = function(){
             console.log('error: '+that.data_source.readyState);
