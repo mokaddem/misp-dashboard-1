@@ -1,0 +1,14 @@
+{% extends "base_widget.html" %}
+
+{% block additional_deps %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/jquery-jvectormap-2.0.3.css') }}" type="text/css" media="screen"/>
+<script src="{{ url_for('static', filename='js/jquery-jvectormap-2.0.3.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jquery-jvectormap-world-mill.js') }}"></script>
+
+<script src="{{ url_for('worldmap.static', filename='js/worldmap.js') }}"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('worldmap.static', filename='css/worldmap.css') }}">
+{% endblock %}
+
+{% block additional_javascript %}
+new worldmap("{{ widgetsConfig.uuid }}", {{ widgetsConfig | tojson }});
+{% endblock %}

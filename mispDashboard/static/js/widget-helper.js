@@ -11,6 +11,18 @@ function easyWidgetInsert(container, config) {
         heading.remove();
     }
 
+    var body = jContainer.parent().find('.panel-body');
+    if (config.fitContent !== undefined && config.fitContent) {
+        body.css('padding', '0px');
+    } else { // check whether to make the panel body fit the content or not based on the widget type
+        switch (config.type) {
+            case 'led':
+                break;
+            default:
+                body.css('padding', '0px');
+        }
+    }
+
     var widget_endpoint = '/widget/' + config.type + '/';
 
     $.ajax({

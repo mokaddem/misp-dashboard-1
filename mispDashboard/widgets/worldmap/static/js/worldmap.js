@@ -1,5 +1,5 @@
-var leaflet_widget = function (container, options) {
-    this.OSMURL='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+var osm;
+var worldmap = function (container, options) {
     this.POLLING_FREQUENCY = 10000;
 
     options.container = container;
@@ -48,6 +48,12 @@ var leaflet_widget = function (container, options) {
             _o.zoomLevel = o.zoomLevel;
         }
 
+        if (o.dotColor !== undefined) {
+            _o.DOT_COLOR = o.dotColor;
+        } else {
+            _o.DOT_COLOR = '#ffff66';
+        }
+
         _o.additionalOptions = o.additionalOptions;
 
         return _o;
@@ -59,24 +65,22 @@ var leaflet_widget = function (container, options) {
         this.data_source = new EventSource(this._options.endpoint);
         this.data_source.onmessage = function(event) {
             var json = jQuery.parseJSON( event.data );
-            var marker = L.marker([json.coord.lat, json.coord.lon]).addTo(that.myOpenStreetMap);
-            var mapEvent = new that.MapEvent(json, marker);
+            var mapEvent = new that.MapEvent(json);
             that.mapEventManager.addMapEvent(mapEvent);
 
         };
         this.data_source.onopen = function(){
-            console.log('connection is opened. '+that.data_source.readyState);
+            // console.log('connection is opened. '+that.data_source.readyState);
         };
         this.data_source.onerror = function(){
             console.log('error: '+that.data_source.readyState);
-            setTimeout(function() { that.connect_to_data_source(); }, 5000);
+            setTimeout(function() { console.log('reconnecting...'); that.connect_to_data_source(); }, 5000);
         };
     }
 
-    this.MapEvent = function (json, marker) {
+    this.MapEvent = function (json) {
         this.coord = json.coord;
         this.regionCode = json.regionCode;
-        this.marker = marker;
         this.categ = json.categ;
         this.value = json.value;
         this.country = json.country;
@@ -86,43 +90,33 @@ var leaflet_widget = function (container, options) {
         this.textMarker = "<b>{1}</b><br>{2}".replace("{1}", this.country).replace("{2}", this.specifName+", "+this.cityName);
     };
 
-    this.MapEventManager = function (myOpenStreetMap) {
+    this.MapEventManager = function (openStreetMapObj) {
         var that = this;
-        this.MAX_ROTATION = 10;
-        this.ROTATION_WAIT_TIME = 15000;
-        this.ZOOM_LEVEL = 7;
+        this.MAX_MARKER = 100;
 
-        this.myOpenStreetMap = myOpenStreetMap;
+        this.openStreetMapObj = openStreetMapObj;
         this._mapEventArray = [];
-        this._currentMapEvent;
-        this._nextEventToShow = 0;
-        this._first_map = true;
         this._coordSet = new Set();
-        //current lat and lon shown in worldMap
-        this._latToPing;
-        this._lonToPing;
         //Markers on the worldMap
         this._allMarkers = [];
         this._curMarkerNum = 0;
-        //use for cancelTimeout
-        this._timeoutRotate;
+        //Region colors
+        this.regionhits = {};
+        this.regionhitsMax = 10;
 
         this.parseOptions = function(options) {
-            if (options.maxRotation !== undefined) {
-                this.MAX_ROTATION = options.maxRotation;
+            if (options.maxMarker !== undefined) {
+                this.MAX_MARKER = options.maxMarker;
             }
-            if (options.rotationWaitTime !== undefined) {
-                this.ROTATION_WAIT_TIME = options.rotationWaitTime;
-            }
-            if (options.zoomLevel !== undefined) {
-                this.ZOOM_LEVEL = options.zoomLevel;
-            }
+
+            this._options = options;
+
+            this.vectorMapContainer = this._options.container.find('.jvectormap-container');
         };
 
-        this.addMapEvent = function(mapevent, doNotRotate) {
+        this.addMapEvent = function(mapevent) {
             if(this.getNumberOfEvent() >= this.MAX_ROTATION) {
                 var toDel = this._mapEventArray[0];
-                toDel.marker.remove(); // remove marker
                 this._coordSet.delete(toDel.text);
                 this._mapEventArray = this._mapEventArray.slice(1);
             }
@@ -130,17 +124,9 @@ var leaflet_widget = function (container, options) {
             if(!this._coordSet.has(mapevent.text)) { // avoid duplicate map
                 this._mapEventArray.push(mapevent);
                 this._coordSet.add(mapevent.text);
+                this.popupCoord(mapevent.coord, mapevent.regionCode);
             } else {
                 //console.log('Duplicate coordinates');
-            }
-
-            if (doNotRotate === undefined || !doNotRotate) {
-                if(this._first_map) { // remove no_map pic
-                    this.rotateMap();
-                    this._first_map = false;
-                } else {
-                    this.rotateMap(mapevent);
-                }
             }
         };
 
@@ -148,48 +134,83 @@ var leaflet_widget = function (container, options) {
             return this._mapEventArray.length
         };
 
-        this.getNextEventToShow = function() {
-            var toShow = this._mapEventArray[this._nextEventToShow];
-            this._nextEventToShow = this._nextEventToShow == this._mapEventArray.length-1 ? 0 : this._nextEventToShow+1;
-            this._currentMapEvent = toShow;
-            return toShow;
-        };
+        this.popupCoord = function(coord, regionCode) {
+            var coord = [coord.lat, coord.lon];
+            var color = 0.5*180;
+            var pnts = this.openStreetMapObj.latLngToPoint(coord[0], coord[1])
+            if (pnts != false) { //sometimes latLngToPoint return false
+                var addedMarker = this.openStreetMapObj.addMarker(this._curMarkerNum, coord, [color]);
+                this._allMarkers.push(this._curMarkerNum)
+                this.marker_animation(pnts.x, pnts.y, this._curMarkerNum);
+                this.update_region(regionCode);
 
-        this.getCurrentMapEvent = function() {
-            return this._currentMapEvent;
-        };
-
-        // Perform the roration of the map in the openStreetMap pannel
-        this.rotateMap = function(mapEvent) {
-            var that = this;
-            clearTimeout(this._timeoutRotate); //cancel current map rotation
-            if (mapEvent == undefined) {
-                var mapEvent = this.getNextEventToShow();
+                this._curMarkerNum = this._curMarkerNum >= this.MAX_MARKER ? 0 : this._curMarkerNum+1;
+                if (this._allMarkers.length >= this.MAX_MARKER) {
+                    var to_remove = this._allMarkers[0];
+                    this.openStreetMapObj.removeMarkers([to_remove]);
+                    this._allMarkers = this._allMarkers.slice(1);
+                }
             }
-            var marker = mapEvent.marker;
-            this.myOpenStreetMap.flyTo([mapEvent.coord.lat, mapEvent.coord.lon], this.ZOOM_LEVEL);
-            mapEvent.marker.bindPopup(mapEvent.textMarker).openPopup();
+        }
 
-            $("#textMap1").text(mapEvent.text);
-            if(this.ROTATION_WAIT_TIME != 0) {
-                this._timeoutRotate = setTimeout(function(){ that.rotateMap(); }, this.ROTATION_WAIT_TIME);
+        this.marker_animation = function(x, y, markerNum) {
+            var markerColor = this.openStreetMapObj.markers[markerNum].element.config.style.current.fill;
+            this.vectorMapContainer.append(
+                $('<div class="marker_animation"></div>')
+                .css({'left': x-15 + 'px'}) /* HACK to center the effect */
+                .css({'top': y-15 + 'px'})
+                .css({ 'background-color': markerColor })
+                .animate({ opacity: 0, scale: 1, height: '80px', width:'80px', margin: '-25px' }, 400, 'linear', function(){$(this).remove(); })
+            );
+        }
+
+        this.update_region = function(regionCode) {
+            if (this.regionhits.hasOwnProperty(regionCode)) {
+                this.regionhits[regionCode] += 1;
+            } else {
+                this.regionhits[regionCode] = 1;
             }
-        };
+            // Force recomputation of min and max for correct color scaling
+            this.regionhitsMax = this.regionhitsMax >= this.regionhits[regionCode] ? this.regionhitsMax : this.regionhits[regionCode];
+            this.openStreetMapObj.series.regions[0].params.max = this.regionhitsMax;
+            // Update data
+            this.openStreetMapObj.series.regions[0].setValues(this.regionhits);
+            this.openStreetMapObj.series.regions[0].legend.render()
+        }
 
-        this.directZoom = function() {
-            var mapEvent = this.getCurrentMapEvent();
-            if (mapEvent != undefined)
-                this.myOpenStreetMap.flyTo([mapEvent.coord.lat, mapEvent.coord.lon], this.ZOOM_LEVEL);
-        };
     };
 
-
     this.parseOptions(options);
-    this.myOpenStreetMap = L.map(container).setView([0, 0], 1);
-    this.osm = new L.TileLayer(this.OSMURL, {minZoom: 0, maxZoom: 18}).addTo(this.myOpenStreetMap);
+    this._options.container.vectorMap({
+        map: 'world_mill',
+        markers: [],
+        series: {
+            markers: [{
+                attribute: 'fill',
+                // scale: ['#1A0DAB', '#e50000', '#62ff41'],
+                // scale: ['#ffff66'],
+                scale: [this._options.DOT_COLOR],
+                values: [],
+                min: 0,
+                max: 180
+            }],
+            regions: [{
+                values: [],
+                min: 0,
+                max: 10,
+                scale:      ['#003FBF','#0063BF','#0087BF','#00ACBF','#00BFAD','#00BF89','#00BF64','#00BF40','#00BF1C','#08BF00','#2CBF00','#51BF00','#75BF00','#99BF00','#BEBF00','#BF9B00','#BF7700','#BF5200','#BF2E00','#BF0900'],
+                normalizeFunction: 'linear',
+                legend: {
+                    horizontal: true
+                }
+            }]
+        },
+    });
+    this.openStreetMapObj = this._options.container.vectorMap('get','mapObject');
+    osm = this.openStreetMapObj;
 
     this.data_source;
-    this.mapEventManager = new this.MapEventManager(this.myOpenStreetMap);
+    this.mapEventManager = new this.MapEventManager(this.openStreetMapObj);
     this.mapEventManager.parseOptions(this._options);
 
     // display (and fetch if needed) existing data
@@ -212,8 +233,7 @@ var leaflet_widget = function (container, options) {
             function() { // success
                 // add data to the widget
                 that.preData.forEach(function(j) {
-                    var marker = L.marker([j.coord.lat, j.coord.lon]).addTo(that.myOpenStreetMap);
-                    var mapEvent = new that.MapEvent(j, marker);
+                    var mapEvent = new MapEvent(j);
                     that.mapEventManager.addMapEvent(mapEvent, true);
                 });
             }, function() { // fail
@@ -233,23 +253,5 @@ var leaflet_widget = function (container, options) {
 
 
 $(document).ready(function () {
-    $( "#rotation_wait_time_selector" ).change(function() {
-        var sel = parseInt($( this ).val());
-        if(isNaN(sel)) {
-            rotation_wait_time = 0;
-        } else {
-            rotation_wait_time = sel;
-        }
-        // var old = ROTATION_WAIT_TIME;
-        // ROTATION_WAIT_TIME = 1000*rotation_wait_time; //seconds
-        if(old == 0) {
-            mapEventManager._timeoutRotate = setTimeout(function(){ mapEventManager.rotateMap(); }, this.ROTATION_WAIT_TIME);
-        }
-    });
 
-    $( "#zoom_selector" ).change(function() {
-        var sel = parseInt($( this ).val());
-        // ZOOM_LEVEL = sel;
-        mapEventManager.directZoom();
-    });
 });
