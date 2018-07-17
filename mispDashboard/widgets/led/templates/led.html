@@ -6,5 +6,5 @@
 {% endblock %}
 
 {% block additional_javascript %}
-new Led("{{ widgetsConfig.uuid }}", {{ widgetsConfig | tojson }});
+new $.led("{{ widgetsConfig.uuid }}", {{ widgetsConfig | tojson }});
 {% endblock %}
