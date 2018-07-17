@@ -9,5 +9,5 @@
 {% endblock %}
 
 {% block additional_javascript %}
-new leaflet_widget("{{ widgetsConfig.uuid }}", {{ widgetsConfig | tojson }});
+new $.leaflet_widget("{{ widgetsConfig.uuid }}", {{ widgetsConfig | tojson }});
 {% endblock %}
