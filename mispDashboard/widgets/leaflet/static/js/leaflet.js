@@ -1,14 +1,15 @@
 (function(factory) {
-    "use strict";
+        "use strict";
         if (typeof define === 'function' && define.amd) {
             define(['jquery'], factory);
-        } else if (window.jQuery && !window.jQuery.fn.Led) {
+        } else if (window.jQuery && !window.jQuery.fn.Leaflet_widget) {
             factory(window.jQuery);
         }
     }
     (function($) {
         'use strict';
 
+        // leaflet_widget object
         var Leaflet_widget = function (container, options) {
             this.OSMURL='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
             this.POLLING_FREQUENCY = 10000;
