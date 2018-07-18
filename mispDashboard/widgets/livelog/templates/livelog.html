@@ -1,0 +1,10 @@
+{% extends "base_widget.html" %}
+
+{% block additional_deps %}
+<script src="{{ url_for('livelog.static', filename='js/livelog.js') }}"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('livelog.static', filename='css/livelog.css') }}">
+{% endblock %}
+
+{% block additional_javascript %}
+new $.livelog("{{ widgetsConfig.uuid }}", {{ widgetsConfig | tojson }});
+{% endblock %}

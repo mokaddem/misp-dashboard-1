@@ -14,6 +14,7 @@
             this.POLLING_FREQUENCY = 10000;
 
             options.container = container;
+            this.connectionState = 'not connected';
             this._options = {};
 
             this.parseOptions(options);
@@ -44,6 +45,22 @@
             });
             this.openStreetMapObj = this._options.container.vectorMap('get','mapObject');
 
+            // add status led
+            this._ev_timer = null;
+            this._ev_retry_frequency = 5; // sec
+            this._cur_ev_retry_count = 0;
+            this._ev_retry_count_thres = 3;
+            var led_container = $('<div class="led-container" style="margin-left: 10px;"></div>');
+            var led = $('<div class="led-small led_red"></div>');
+            this.statusLed = led;
+            led_container.append(led);
+            var header = this._options.container.parent().parent().find('.panel-heading');
+            if (header.length > 0) { // add in panel header
+                header.append(led_container);
+            } else { // add over the map
+                this._options.container.append(led_container);
+            }
+
             this.data_source;
             this.mapEventManager = new this.MapEventManager(this.openStreetMapObj);
             this.mapEventManager.parseOptions(this._options);
@@ -68,8 +85,8 @@
                     function() { // success
                         // add data to the widget
                         that.preData.forEach(function(j) {
-                            var mapEvent = new MapEvent(j);
-                            that.mapEventManager.addMapEvent(mapEvent, true);
+                            var mapEvent = new that.MapEvent(j);
+                            that.mapEventManager.addMapEvent(mapEvent);
                         });
                     }, function() { // fail
                     }
@@ -95,16 +112,16 @@
                 if (o.endpoint !== undefined && typeof o.endpoint == 'string') {
                     _o.endpoint = o.endpoint;
                 } else {
-                    throw "Leaftlet must have a valid endpoint";
+                    throw "Worldmap must have a valid endpoint";
                 }
 
                 _o.pollingFrequency = o.pollingFrequency !== undefined ? o.pollingFrequency*1000 : this.POLLING_FREQUENCY;
-                _o.name = o.name !== undefined ? o.name : "unnamed led";
+                _o.name = o.name !== undefined ? o.name : "unnamed worldmap";
 
                 if (o.container !== undefined) {
                     _o.container = o.container instanceof jQuery ? o.container : $('#'+o.container);
                 } else {
-                    throw "LeafLet must have a container";
+                    throw "Worldmap must have a container";
                 }
 
                 // pre-data is either the data to be shown or an URL from which the data should be taken from
@@ -144,20 +161,73 @@
 
             connect_to_data_source: function() {
                 var that = this;
-                this.data_source = new EventSource(this._options.endpoint);
-                this.data_source.onmessage = function(event) {
-                    var json = jQuery.parseJSON( event.data );
-                    var mapEvent = new that.MapEvent(json);
-                    that.mapEventManager.addMapEvent(mapEvent);
+                if (!this.data_source) {
+                    this.data_source = new EventSource(this._options.endpoint);
+                    this.data_source.onmessage = function(event) {
+                        var json = jQuery.parseJSON( event.data );
+                        var mapEvent = new that.MapEvent(json);
+                        that.mapEventManager.addMapEvent(mapEvent);
 
-                };
-                this.data_source.onopen = function(){
-                    // console.log('connection is opened. '+that.data_source.readyState);
-                };
-                this.data_source.onerror = function(){
-                    console.log('error: '+that.data_source.readyState);
-                    setTimeout(function() { console.log('reconnecting...'); that.connect_to_data_source(); }, 5000);
-                };
+                    };
+                    this.data_source.onopen = function(){
+                        that._cur_ev_retry_count = 0;
+                        that.update_connection_state('connected');
+                    };
+                    this.data_source.onerror = function(){
+                        if (that.data_source.readyState == 0) { // connecting
+                            that.update_connection_state('connecting');
+                        }  else if (that.data_source.readyState == 2) { // closed, reconnect with new object
+                            that.reconnection_logique();
+                        }
+                    };
+                }
+            },
+
+            reconnection_logique: function() {
+                var that = this;
+                if (that.data_source) {
+                    that.data_source.close();
+                    that.data_source = null;
+                }
+                if (that._ev_timer) {
+                    clearTimeout(that._ev_timer);
+                }
+                if(that._cur_ev_retry_count >= that._ev_retry_count_thres) {
+                    that.update_connection_state('not connected');
+                } else {
+                    that._cur_ev_retry_count++;
+                    that.update_connection_state('connecting');
+                }
+                that._ev_timer = setTimeout(function () { that.connect_to_data_source(); }, that._ev_retry_frequency*1000);
+            },
+
+            update_connection_state: function(connectionState) {
+                this.connectionState = connectionState;
+                this.updateDOMState(this.statusLed, connectionState);
+            },
+
+            updateDOMState: function(led, state) {
+                switch (state) {
+                    case 'connected':
+                        led.removeClass("led_red");
+                        led.removeClass("led_orange");
+                        led.addClass("led_green");
+                        break;
+                    case 'not connected':
+                        led.removeClass("led_green");
+                        led.removeClass("led_orange");
+                        led.addClass("led_red");
+                        break;
+                    case 'connecting':
+                        led.removeClass("led_green");
+                        led.removeClass("led_red");
+                        led.addClass("led_orange");
+                        break;
+                    default:
+                        led.removeClass("led_green");
+                        led.removeClass("led_orange");
+                        led.addClass("led_red");
+                }
             },
 
             MapEvent: function (json) {

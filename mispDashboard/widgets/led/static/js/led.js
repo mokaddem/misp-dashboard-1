@@ -75,7 +75,6 @@
                         callback(that, data);
                     },
                     error: function(jqXHR, textStatus, errorThrown) {
-                        console.log(textStatus);
                         callback(that, {last_keepalive: false});
                     }
                 });

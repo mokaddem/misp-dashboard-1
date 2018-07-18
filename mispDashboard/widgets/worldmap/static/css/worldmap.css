@@ -11,3 +11,31 @@
     pointer-events: none; /* dont kill the hover event of markers */
     -webkit-transform: translateZ(0); /* little trick to force GPU acceleration */
 }
+
+.led_green {
+    background-color: #ABFF00;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 6px, #89FF00 0 0px 6px;
+}
+
+.led_red {
+    background-color: #F82222;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 6px, #FF0303 0 0px 6px;
+}
+
+.led_orange {
+    background-color: #FFB400;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 6px, #FF9000 0 0px 6px;
+}
+
+.led-small {
+    margin: auto auto;
+    margin-top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.led-container {
+    text-align: center;
+    display: inline-block;
+}

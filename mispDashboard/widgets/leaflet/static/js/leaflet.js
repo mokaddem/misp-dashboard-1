@@ -21,6 +21,22 @@
             this.myOpenStreetMap = L.map(container).setView([0, 0], 1);
             this.osm = new L.TileLayer(this.OSMURL, {minZoom: 0, maxZoom: 18}).addTo(this.myOpenStreetMap);
 
+            // add status led
+            this._ev_timer = null;
+            this._ev_retry_frequency = 5; // sec
+            this._cur_ev_retry_count = 0;
+            this._ev_retry_count_thres = 3;
+            var led_container = $('<div class="led-container" style="margin-left: 10px;"></div>');
+            var led = $('<div class="led-small led_red"></div>');
+            this.statusLed = led;
+            led_container.append(led);
+            var header = this._options.container.parent().parent().find('.panel-heading');
+            if (header.length > 0) { // add in panel header
+                header.append(led_container);
+            } else { // add over the map
+                this._options.container.append(led_container);
+            }
+
             this.data_source;
             this.mapEventManager = new this.MapEventManager(this.myOpenStreetMap);
             this.mapEventManager.parseOptions(this._options);
@@ -116,21 +132,75 @@
 
             connect_to_data_source: function() {
                 var that = this;
-                this.data_source = new EventSource(this._options.endpoint);
-                this.data_source.onmessage = function(event) {
-                    var json = jQuery.parseJSON( event.data );
-                    var marker = L.marker([json.coord.lat, json.coord.lon]).addTo(that.myOpenStreetMap);
-                    var mapEvent = new that.MapEvent(json, marker);
-                    that.mapEventManager.addMapEvent(mapEvent);
+                if (!this.data_source) {
+                    this.data_source = new EventSource(this._options.endpoint);
+                    this.data_source.onmessage = function(event) {
+                        var json = jQuery.parseJSON( event.data );
+                        var marker = L.marker([json.coord.lat, json.coord.lon]).addTo(that.myOpenStreetMap);
+                        var mapEvent = new that.MapEvent(json, marker);
+                        that.mapEventManager.addMapEvent(mapEvent);
 
-                };
-                this.data_source.onopen = function(){
-                    // console.log('connection is opened. '+that.data_source.readyState);
-                };
-                this.data_source.onerror = function(){
-                    console.log('error: '+that.data_source.readyState);
-                    setTimeout(function() { that.connect_to_data_source(); }, 5000);
-                };
+                    };
+                    this.data_source.onopen = function(){
+                        that._cur_ev_retry_count = 0;
+                        that.update_connection_state('connected');
+                    };
+                    this.data_source.onerror = function(){
+                        if (that.data_source.readyState == 0) { // reconnecting
+                            that.update_connection_state('connecting');
+                        }  else if (that.data_source.readyState == 2) { // closed, reconnect with new object
+                            that.reconnection_logique();
+                        }
+                        // setTimeout(function() { that.connect_to_data_source(); }, 5000);
+                    };
+                }
+            },
+
+            reconnection_logique: function () {
+                var that = this;
+                if (that.data_source) {
+                    that.data_source.close();
+                    that.data_source = null;
+                }
+                if (that._ev_timer) {
+                    clearTimeout(that._ev_timer);
+                }
+                if(that._cur_ev_retry_count >= that._ev_retry_count_thres) {
+                    that.update_connection_state('not connected');
+                } else {
+                    that._cur_ev_retry_count++;
+                    that.update_connection_state('connecting');
+                }
+                that._ev_timer = setTimeout(function () { that.connect_to_data_source(); }, that._ev_retry_frequency*1000);
+            },
+
+            update_connection_state: function(connectionState) {
+                this.connectionState = connectionState;
+                this.updateDOMState(this.statusLed, connectionState);
+            },
+
+            updateDOMState: function(led, state) {
+                switch (state) {
+                    case 'connected':
+                        led.removeClass("led_red");
+                        led.removeClass("led_orange");
+                        led.addClass("led_green");
+                        break;
+                    case 'not connected':
+                        led.removeClass("led_green");
+                        led.removeClass("led_orange");
+                        led.addClass("led_red");
+                        break;
+                    case 'connecting':
+                        led.removeClass("led_green");
+                        led.removeClass("led_red");
+                        led.addClass("led_orange");
+                        break;
+                    default:
+                        led.removeClass("led_green");
+                        led.removeClass("led_orange");
+                        led.addClass("led_red");
+                }
             },
 
             MapEvent: function (json, marker) {
