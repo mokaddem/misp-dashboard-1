@@ -18,6 +18,26 @@
             this._options = {};
             this.parseOptions(options)
 
+            // add status led
+            this._ev_timer = null;
+            this._ev_retry_frequency = 5; // sec
+            this._cur_ev_retry_count = 0;
+            this._ev_retry_count_thres = 3;
+            var led_container = $('<div class="led-container" style="margin-left: 10px;"></div>');
+            var led = $('<div class="led-small led_red"></div>');
+            this.statusLed = led;
+            led_container.append(led);
+            var header = this._options.container.parent().parent().find('.panel-heading');
+            if (header.length > 0) { // add in panel header
+                header.append(led_container);
+            } else { // add over the map
+                this._options.container.append(led_container);
+            }
+            console.log(header);
+            this.data_source;
+
+            this.fetch_predata();
+            this.connect_to_data_source();
         };
 
         Livelog.prototype = {
@@ -42,11 +62,127 @@
                     throw "Livelog must have a container";
                 }
 
+                // pre-data is either the data to be shown or an URL from which the data should be taken from
+                if (o.preData !== undefined) {
+                    if (Array.isArray(o.preData)){
+                        _o.preDataURL = null;
+                        _o.preData = o.preData;
+                    } else { // should fetch
+                        _o.preDataURL = o.preData;
+                        _o.preData = [];
+                    }
+                } else { // no preData
+                    _o.preDataURL = null;
+                    _o.preData = [];
+                }
+
                 _o.additionalOptions = o.additionalOptions;
 
                 return _o;
             },
 
+            fetch_predata: function() {
+                var that = this;
+                if (this._options.preDataURL !== null) {
+                    $.when(
+                        $.ajax({
+                            dataType: "json",
+                            url: this._options.preDataURL,
+                            data: this._options.additionalOptions,
+                            success: function(data) {
+                                that.preData = data;
+                            },
+                            error: function(jqXHR, textStatus, errorThrown) {
+                                console.log(textStatus);
+                                that.preData = [];
+                            }
+                        })
+                    ).then(
+                        function() { // success
+                            // add data to the widget
+                            that.preData.forEach(function(j) {
+                                that.add_entry(j);
+                            });
+                        }, function() { // fail
+                        }
+                    );
+                }
+            },
+
+            connect_to_data_source: function() {
+                var that = this;
+                if (!this.data_source) {
+                    // var url_param = $.param( this.additionalOptions );
+                    this.data_source = new EventSource(this._options.endpoint);
+                    this.data_source.onmessage = function(event) {
+                        var json = jQuery.parseJSON( event.data );
+                        that.add_entry(json);
+                    };
+                    this.data_source.onopen = function(){
+                        that._cur_ev_retry_count = 0;
+                        that.update_connection_state('connected');
+                    };
+                    this.data_source.onerror = function(){
+                        if (that.data_source.readyState == 0) { // reconnecting
+                            that.update_connection_state('connecting');
+                        }  else if (that.data_source.readyState == 2) { // closed, reconnect with new object
+                            that.reconnection_logique();
+                        }
+                        // setTimeout(function() { that.connect_to_data_source(); }, 5000);
+                    };
+                }
+            },
+
+            reconnection_logique: function () {
+                var that = this;
+                if (that.data_source) {
+                    that.data_source.close();
+                    that.data_source = null;
+                }
+                if (that._ev_timer) {
+                    clearTimeout(that._ev_timer);
+                }
+                if(that._cur_ev_retry_count >= that._ev_retry_count_thres) {
+                    that.update_connection_state('not connected');
+                } else {
+                    that._cur_ev_retry_count++;
+                    that.update_connection_state('connecting');
+                }
+                that._ev_timer = setTimeout(function () { that.connect_to_data_source(); }, that._ev_retry_frequency*1000);
+            },
+
+            update_connection_state: function(connectionState) {
+                this.connectionState = connectionState;
+                this.updateDOMState(this.statusLed, connectionState);
+            },
+
+            updateDOMState: function(led, state) {
+                switch (state) {
+                    case 'connected':
+                        led.removeClass("led_red");
+                        led.removeClass("led_orange");
+                        led.addClass("led_green");
+                        break;
+                    case 'not connected':
+                        led.removeClass("led_green");
+                        led.removeClass("led_orange");
+                        led.addClass("led_red");
+                        break;
+                    case 'connecting':
+                        led.removeClass("led_green");
+                        led.removeClass("led_red");
+                        led.addClass("led_orange");
+                        break;
+                    default:
+                        led.removeClass("led_green");
+                        led.removeClass("led_orange");
+                        led.addClass("led_red");
+                }
+            },
+
+            add_entry: function(entry) {
+                console.log(entry)
+            },
 
         };
 
