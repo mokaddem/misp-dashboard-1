@@ -12,6 +12,7 @@
         // Livelog object
         var Livelog = function(container, options) {
             this.POLLING_FREQUENCY = 3000; // 3s
+            this.MAX_TABLE_ENTRIES = 20;
 
             options.container = container;
 
@@ -98,7 +99,7 @@
                 if (o.tableMaxEntries !== undefined) {
                     _o.tableMaxEntries = parseInt(o.tableMaxEntries);
                 } else {
-                    _o.tableMaxEntries = 100;
+                    _o.tableMaxEntries = this.MAX_TABLE_ENTRIES;
                 }
 
                 // pre-data is either the data to be shown or an URL from which the data should be taken from

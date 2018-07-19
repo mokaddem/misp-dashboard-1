@@ -1,0 +1,82 @@
+.led_green {
+    background-color: #ABFF00;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 9px, #89FF00 0 0px 6px;
+}
+
+.led_red {
+    background-color: #F82222;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 9px, #FF0303 0 0px 6px;
+}
+
+.led_orange {
+    background-color: #FFB400;
+    box-shadow: rgba(0, 0, 0, 0.2) 0 -1px 7px 1px, inset #304701 0 -1px 9px, #FF9000 0 0px 6px;
+}
+
+.led {
+    margin: auto auto;
+    margin-top: 7.5px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+}
+
+.led-container {
+    text-align: center;
+    display: inline-block;
+}
+
+.geoquery-btn-container {
+    position: relative;
+    display: inline-block;
+    float: right;
+    top: -4px;
+}
+
+div.date-picker-wrapper {
+    z-index: 1000;
+}
+
+div.date-picker-wrapper div.custom-top {
+    color: #000;
+}
+
+.geoquery-btn-container button[disabled] {
+    cursor: not-allowed;
+}
+
+.spinner-small {
+    height: 8px;
+    width: 8px;
+    margin-left: 5px;
+    position: relative;
+    display: inline-block;
+    -webkit-animation: translation 1s infinite ease-in-out;
+    -moz-animation: translation 1s infinite ease-in-out;
+    -o-animation: translation 1s infinite ease-in-out;
+    animation: translation 1s infinite ease-in-out;
+    background: rgba(0, 136, 204, .8);
+    border-radius: 100%;
+    z-index: 15;
+}
+
+@-webkit-keyframes translation {
+    0% {top: -10px;}
+    50% {top: 5px;}
+    100% {top: -10px;}
+}
+@-moz-keyframes translation {
+    0% {top: -10px;}
+    50% {top: 5px;}
+    100% {top: -10px;}
+}
+@-o-keyframes translation {
+    0% {top: -10px;}
+    50% {top: 5px;}
+    100% {top: -10px;}
+}
+@keyframes translation {
+    0% {top: -10px;}
+    50% {top: 5px;}
+    100% {top: -10px;}
+}
