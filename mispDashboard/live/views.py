@@ -18,7 +18,7 @@ def index():
                 'live_widget2': generateWidgetConfig('led', 'http://localhost:5004/led', name='Status led', pollingFrequency=2),
                 'live_widget3': generateWidgetConfig('led', 'http://localhost:5004/led', name='Status led', pollingFrequency=2),
                 'live_widget4': generateWidgetConfig('livelog', 'http://localhost:5004/logs_stream', name='Live log',
-                    preData='http://localhost:5004/logs')
+                    preData='http://localhost:5004/logs', tableHeader=['Field 1', 'Field 2', 'Field 3'], tableMaxEntries=3)
             }
             # itemToPlot=cfg.get('Dashboard', 'item_to_plot'),
             # graph_log_refresh_rate=cfg.getint('Dashboard' ,'graph_log_refresh_rate'),

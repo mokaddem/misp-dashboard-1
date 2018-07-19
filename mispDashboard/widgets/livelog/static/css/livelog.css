@@ -25,3 +25,11 @@
     text-align: center;
     display: inline-block;
 }
+
+.led-container > span {
+    margin: auto 5px;
+}
+
+div.dataTables_scrollHead table.dataTable {
+    margin-top: 0px !important;
+}

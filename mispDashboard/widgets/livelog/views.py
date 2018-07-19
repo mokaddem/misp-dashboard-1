@@ -10,6 +10,9 @@ def livelog():
     for k, v in request.args.items():
         if k == 'endpoint':
             continue
+        if k == 'tableHeader[]':
+            kargs['tableHeader'] = request.args.getlist('tableHeader[]')
+            continue
         kargs[k] = v
     endpoint = request.args.get('endpoint')
 

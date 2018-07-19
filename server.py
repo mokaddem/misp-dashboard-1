@@ -9,6 +9,7 @@ from time import sleep, strftime
 import datetime
 import os
 import logging
+import uuid
 
 import util
 from helpers import geo_helper
@@ -223,6 +224,35 @@ def trendings():
     return render_template('trendings.html',
             maxNum=maxNum,
             url_misp_event=url_misp_event
+            )
+
+@app.route("/custom")
+def custom():
+    return render_template('custom.html',
+            )
+
+@app.route("/widget")
+def widget():
+    return render_template('widget.html',
+            uuid=str(uuid.uuid4()),
+            name='My widget',
+            data={'lineData': [[0, 3], [4, 8], [8, 5], [9, 13]], 'url': 'http://localhost:5004/line'},
+            )
+
+@app.route("/widget/<type>")
+def widget_type(type):
+    if type == 'line':
+        return linechart()
+    elif type == 'bar':
+        return barchart()
+    else:
+        return custom()
+
+def linechart():
+    return render_template('widgets/linechart.html',
+            uuid=str(uuid.uuid4()),
+            name='Linechart widget',
+            data={'url': 'http://localhost:5004/line'},
             )
 
 ''' INDEX '''

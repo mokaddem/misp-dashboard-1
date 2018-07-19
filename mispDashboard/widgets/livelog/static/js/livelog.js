@@ -18,6 +18,32 @@
             this._options = {};
             this.parseOptions(options)
 
+            // create table and draw header
+            var tableOptions = {
+                dom: "<'row'<'col-sm-12'<'dt-toolbar-led'>>>"
+                        + "<'row'<'col-sm-12'tr>>"
+                        + "<'row'<'col-sm-5'i><'col-sm-7'p>>",
+                searching: false,
+                scrollY:        this._options.container.parent().height()-45-28,
+                scrollCollapse: true,
+                paging:         false,
+                "order": [[ 0, "desc" ]],
+                columnDefs: [
+                    { targets: 0, orderable: false },
+                    { targets: '_all', searchable: false, orderable: false }
+                ]
+            };
+            var DOMTable = $('<table class="table table-striped table-bordered" style="width:100%"><thead></thead></table>').appendTo(this._options.container);
+            var tr = $('<tr></tr>');
+            this._options.tableHeader.forEach(function(field) {
+                var th = $('<th>'+field+'</th>');
+                tr.append(th);
+            });
+            DOMTable.find('thead').append(tr);
+            this.dt = DOMTable.DataTable(tableOptions);
+
+            this.fetch_predata();
+
             // add status led
             this._ev_timer = null;
             this._ev_retry_frequency = 5; // sec
@@ -31,12 +57,13 @@
             if (header.length > 0) { // add in panel header
                 header.append(led_container);
             } else { // add over the map
-                this._options.container.append(led_container);
+                // this._options.container.append(led_container);
+                led.css('display', 'inline-block');
+                led_container.append($('<span>Status</span>')).css('float', 'left');
+                $('.dt-toolbar-led').append(led_container)
             }
-            console.log(header);
             this.data_source;
 
-            this.fetch_predata();
             this.connect_to_data_source();
         };
 
@@ -60,6 +87,18 @@
                     _o.container = o.container instanceof jQuery ? o.container : $('#'+o.container);
                 } else {
                     throw "Livelog must have a container";
+                }
+
+                if (o.tableHeader !== undefined && Array.isArray(o.tableHeader)) {
+                    _o.tableHeader = o.tableHeader;
+                } else {
+                    throw "Livelog must have a valid header";
+                }
+
+                if (o.tableMaxEntries !== undefined) {
+                    _o.tableMaxEntries = parseInt(o.tableMaxEntries);
+                } else {
+                    _o.tableMaxEntries = 100;
                 }
 
                 // pre-data is either the data to be shown or an URL from which the data should be taken from
@@ -181,7 +220,18 @@
             },
 
             add_entry: function(entry) {
-                console.log(entry)
+                this.dt.row.add(entry).draw( false );
+                // remove entries
+                let numRows = this.dt.rows().count();
+                let rowsToRemove = numRows - this._options.tableMaxEntries;
+                if (rowsToRemove > 0 && this._options.tableMaxEntries != -1) {
+                    //get row indexes as an array
+                    let arraySlice = this.dt.rows().indexes().toArray();
+                    //get row indexes to remove starting at row 0
+                    arraySlice = arraySlice.slice(-rowsToRemove);
+                    //remove the rows and redraw the table
+                    var rows = this.dt.rows(arraySlice).remove().draw();
+                }
             },
 
         };
