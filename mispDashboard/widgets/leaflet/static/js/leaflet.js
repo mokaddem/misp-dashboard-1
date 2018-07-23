@@ -150,8 +150,10 @@
                             that.update_connection_state('connecting');
                         }  else if (that.data_source.readyState == 2) { // closed, reconnect with new object
                             that.reconnection_logique();
+                        } else {
+                            that.update_connection_state('not connected');
+                            that.reconnection_logique();
                         }
-                        // setTimeout(function() { that.connect_to_data_source(); }, 5000);
                     };
                 }
             },

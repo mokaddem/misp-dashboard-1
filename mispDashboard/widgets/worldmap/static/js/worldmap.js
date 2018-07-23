@@ -178,6 +178,9 @@
                             that.update_connection_state('connecting');
                         }  else if (that.data_source.readyState == 2) { // closed, reconnect with new object
                             that.reconnection_logique();
+                        } else {
+                            that.update_connection_state('not connected');
+                            that.reconnection_logique();
                         }
                     };
                 }

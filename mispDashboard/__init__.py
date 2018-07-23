@@ -6,6 +6,7 @@ from .widgets.leaflet import leaflet
 from .widgets.geoquery import geoquery
 from .widgets.worldmap import worldmap
 from .widgets.livelog import livelog
+from .widgets.punchcard import punchcard
 
 app = Flask(__name__)
 
@@ -17,3 +18,4 @@ app.register_blueprint(leaflet, url_prefix='/widget/leaflet')
 app.register_blueprint(geoquery, url_prefix='/widget/geoquery')
 app.register_blueprint(worldmap, url_prefix='/widget/worldmap')
 app.register_blueprint(livelog, url_prefix='/widget/livelog')
+app.register_blueprint(punchcard, url_prefix='/widget/punchcard')
