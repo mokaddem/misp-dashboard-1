@@ -11,14 +11,16 @@
 
         // punchcard object
         var Punchcard_widget = function (container, options) {
-            this.SINGULAR = 'login';
-            this.PLURAL = 'logins';
+            this._default_options = {
+                singular: 'loging',
+                plural: 'logins'
+            }
 
             options.container = container;
-            this._options = {};
             this.myPunchcard;
 
-            this.parseOptions(options);
+            this.validateOptions(options);
+            this._options = $.extend({}, this._default_options, options);
 
             var that = this;
             this.fetchState(function(data) {
@@ -40,44 +42,18 @@
         Punchcard_widget.prototype = {
             constructor: Punchcard_widget,
 
-            parseOptions: function(options) {
-                var _o = this._options;
+            validateOptions: function(options) {
                 var o = options;
 
-                if (o.endpoint !== undefined && typeof o.endpoint == 'string') {
-                    _o.endpoint = o.endpoint;
-                } else {
+                if (o.endpoint === undefined || typeof o.endpoint != 'string') {
                     throw "Punchcard must have a valid endpoint";
                 }
 
-                _o.pollingFrequency = o.pollingFrequency !== undefined ? o.pollingFrequency*1000 : this.POLLING_FREQUENCY;
-                _o.name = o.name !== undefined ? o.name : "unnamed punchcard";
-
-                if (o.container !== undefined) {
-                    _o.container = o.container instanceof jQuery ? o.container : $('#'+o.container);
-                } else {
+                if (o.container === undefined) {
                     throw "Punchcard must have a container";
-                }
-
-                if (o.responsive !== undefined) {
-                    _o.responsive = o.responsive;
-                }
-
-                if (o.singular !== undefined) {
-                    _o.singular = o.singular;
                 } else {
-                    _o.singular = this.SINGULAR;
+                    o.container = o.container instanceof jQuery ? o.container : $('#'+o.container);
                 }
-
-                if (o.plural !== undefined) {
-                    _o.plural = o.plural;
-                } else {
-                    _o.plural = this.PLURAL;
-                }
-
-                _o.additionalOptions = o.additionalOptions;
-
-                return _o;
             },
 
             fetchState: function(callback) {

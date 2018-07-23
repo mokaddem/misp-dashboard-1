@@ -11,13 +11,15 @@
 
         // Livelog object
         var Livelog = function(container, options) {
-            this.POLLING_FREQUENCY = 5; // 3s
-            this.MAX_TABLE_ENTRIES = 20;
+            this._default_options = {
+                pollingFrequency: 5000,
+                maxTableEntries: 20,
+            }
 
             options.container = container;
 
-            this._options = {};
-            this.parseOptions(options)
+            this.validateOptions(options);
+            this._options = $.extend({}, this._default_options, options);
 
             // create table and draw header
             var tableOptions = {
@@ -47,7 +49,7 @@
 
             // add status led
             this._ev_timer = null;
-            this._ev_retry_frequency = this.POLLING_FREQUENCY; // sec
+            this._ev_retry_frequency = this._options.pollingFrequency; // sec
             this._cur_ev_retry_count = 0;
             this._ev_retry_count_thres = 3;
             var led_container = $('<div class="led-container" style="margin-left: 10px;"></div>');
@@ -71,54 +73,35 @@
         Livelog.prototype = {
             constructor: Livelog,
 
-            parseOptions: function(options) {
-                var _o = this._options;
+            validateOptions: function(options) {
                 var o = options;
 
-                if (o.endpoint !== undefined && typeof o.endpoint == 'string') {
-                    _o.endpoint = o.endpoint;
-                } else {
+                if (o.endpoint === undefined || typeof o.endpoint != 'string') {
                     throw "Livelog must have a valid endpoint";
                 }
 
-                _o.pollingFrequency = o.pollingFrequency !== undefined ? o.pollingFrequency*1000 : this.POLLING_FREQUENCY;
-                _o.name = o.name !== undefined ? o.name : "unnamed livelog";
-
-                if (o.container !== undefined) {
-                    _o.container = o.container instanceof jQuery ? o.container : $('#'+o.container);
-                } else {
+                if (o.container === undefined) {
                     throw "Livelog must have a container";
+                } else {
+                    o.container = o.container instanceof jQuery ? o.container : $('#'+o.container);
                 }
 
-                if (o.tableHeader !== undefined && Array.isArray(o.tableHeader)) {
-                    _o.tableHeader = o.tableHeader;
-                } else {
+                // pre-data is either the data to be shown or an URL from which the data should be taken from
+                if (Array.isArray(o.preData)){
+                    o.preDataURL = null;
+                    o.preData = o.preData;
+                } else if (o.preData !== undefined) { // should fetch
+                    o.preDataURL = o.preData;
+                    o.preData = [];
+                }
+
+                if (o.tableHeader === undefined || !Array.isArray(o.tableHeader)) {
                     throw "Livelog must have a valid header";
                 }
 
                 if (o.tableMaxEntries !== undefined) {
-                    _o.tableMaxEntries = parseInt(o.tableMaxEntries);
-                } else {
-                    _o.tableMaxEntries = this.MAX_TABLE_ENTRIES;
+                    o.tableMaxEntries = parseInt(o.tableMaxEntries);
                 }
-
-                // pre-data is either the data to be shown or an URL from which the data should be taken from
-                if (o.preData !== undefined) {
-                    if (Array.isArray(o.preData)){
-                        _o.preDataURL = null;
-                        _o.preData = o.preData;
-                    } else { // should fetch
-                        _o.preDataURL = o.preData;
-                        _o.preData = [];
-                    }
-                } else { // no preData
-                    _o.preDataURL = null;
-                    _o.preData = [];
-                }
-
-                _o.additionalOptions = o.additionalOptions;
-
-                return _o;
             },
 
             fetch_predata: function() {
@@ -130,17 +113,17 @@
                             url: this._options.preDataURL,
                             data: this._options.additionalOptions,
                             success: function(data) {
-                                that.preData = data;
+                                that._options.preData = data;
                             },
                             error: function(jqXHR, textStatus, errorThrown) {
                                 console.log(textStatus);
-                                that.preData = [];
+                                that._options.preData = [];
                             }
                         })
                     ).then(
                         function() { // success
                             // add data to the widget
-                            that.preData.forEach(function(j) {
+                            that._options.preData.forEach(function(j) {
                                 that.add_entry(j);
                             });
                         }, function() { // fail

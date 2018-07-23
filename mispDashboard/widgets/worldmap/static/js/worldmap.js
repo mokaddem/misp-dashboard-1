@@ -11,25 +11,31 @@
 
         // Worldmap object
         var Worldmap = function (container, options) {
-            this.POLLING_FREQUENCY = 5;
-            this.DOT_COLOR = '#ffff66';
-            this.SCALE_COLOR = ['#003FBF','#0063BF','#0087BF','#00ACBF','#00BFAD','#00BF89','#00BF64','#00BF40','#00BF1C','#08BF00','#2CBF00','#51BF00','#75BF00','#99BF00','#BEBF00','#BF9B00','#BF7700','#BF5200','#BF2E00','#BF0900'];
-            this.MAX_MARKER = 100;
-            this.MARKER_SIZE = 80;
-            this.MARKER_SPEED = 400; // ms
+            this._default_options = {
+                pollingFrequency: 5000, // ms
+                scaleColor: ['#003FBF','#0063BF','#0087BF','#00ACBF','#00BFAD','#00BF89','#00BF64','#00BF40','#00BF1C','#08BF00','#2CBF00','#51BF00','#75BF00','#99BF00','#BEBF00','#BF9B00','#BF7700','#BF5200','#BF2E00','#BF0900'],
+                markerColor: '#ffff66',
+                maxMarker: 100,
+                markerSize: 80, // px
+                markerSpeed: 600, // ms
+                endpoint: undefined,
+                container: undefined,
+                preData: [],
+                preDataURL: null,
+            }
 
             options.container = container;
             this.connectionState = 'not connected';
-            this._options = {};
+            this.validateOptions(options);
+            this._options = $.extend({}, this._default_options, options);
 
-            this.parseOptions(options);
             this._options.container.vectorMap({
                 map: 'world_mill',
                 markers: [],
                 series: {
                     markers: [{
                         attribute: 'fill',
-                        scale: [this._options.dotColor],
+                        scale: [this._options.markerColor],
                         values: [],
                         min: 0,
                         max: 180
@@ -67,7 +73,7 @@
 
             this.data_source;
             this.mapEventManager = new this.MapEventManager(this.openStreetMapObj);
-            this.mapEventManager.parseOptions(this._options);
+            this.mapEventManager.validateOptions(this._options);
 
             // display (and fetch if needed) existing data
             var that = this;
@@ -78,17 +84,17 @@
                         url: this._options.preDataURL,
                         data: this._options.additionalOptions,
                         success: function(data) {
-                            that.preData = data;
+                            that._options.preData = data;
                         },
                         error: function(jqXHR, textStatus, errorThrown) {
                             console.log(textStatus);
-                            that.preData = [];
+                            that._options.preData = [];
                         }
                     })
                 ).then(
                     function() { // success
                         // add data to the widget
-                        that.preData.forEach(function(j) {
+                        that._options.preData.forEach(function(j) {
                             var mapEvent = new that.MapEvent(j);
                             that.mapEventManager.addMapEvent(mapEvent);
                         });
@@ -100,7 +106,12 @@
                         that.connect_to_data_source();
                     }
                 );
-            } else {
+            } else { // no need to fetch
+                // add data to the widget
+                this._options.preData.forEach(function(j) {
+                    var mapEvent = new that.MapEvent(j);
+                    that.mapEventManager.addMapEvent(mapEvent);
+                });
                 // Subscribe to the flask eventStream
                 this.connect_to_data_source();
             }
@@ -109,82 +120,31 @@
         Worldmap.prototype = {
             constructor: Worldmap,
 
-            parseOptions: function(options) {
-                var _o = this._options;
+            validateOptions: function(options) {
                 var o = options;
 
-                if (o.endpoint !== undefined && typeof o.endpoint == 'string') {
-                    _o.endpoint = o.endpoint;
-                } else {
+                if (o.endpoint === undefined || typeof o.endpoint != 'string') {
                     throw "Worldmap must have a valid endpoint";
                 }
 
-                _o.pollingFrequency = o.pollingFrequency !== undefined ? o.pollingFrequency*1000 : this.POLLING_FREQUENCY;
-                _o.name = o.name !== undefined ? o.name : "unnamed worldmap";
-
-                if (o.container !== undefined) {
-                    _o.container = o.container instanceof jQuery ? o.container : $('#'+o.container);
-                } else {
+                if (o.container === undefined) {
                     throw "Worldmap must have a container";
+                } else {
+                    o.container = o.container instanceof jQuery ? o.container : $('#'+o.container);
                 }
 
                 // pre-data is either the data to be shown or an URL from which the data should be taken from
-                if (o.preData !== undefined) {
-                    if (Array.isArray(o.preData)){
-                        _o.preDataURL = null;
-                        _o.preData = o.preData;
-                    } else { // should fetch
-                        _o.preDataURL = o.preData;
-                        _o.preData = [];
-                    }
-                } else { // no preData
-                    _o.preDataURL = null;
-                    _o.preData = [];
-                }
-
-                if (o.maxRotation !== undefined) {
-                    _o.maxRotation = o.maxRotation;
-                }
-                if (o.rotationWaitTime !== undefined) {
-                    _o.rotationWaitTime = o.rotationWaitTime;
-                }
-                if (o.zoomLevel !== undefined) {
-                    _o.zoomLevel = o.zoomLevel;
-                }
-
-                if (o.dotColor !== undefined) {
-                    _o.dotColor = o.dotColor;
-                } else {
-                    _o.dotColor = this.DOT_COLOR;
-                }
-
-                if (o.scaleColor !== undefined) {
-                    _o.scaleColor = o.scaleColor;
-                } else {
-                    _o.scaleColor = this.SCALE_COLOR;
-                }
-
-                if (o.maxMarker !== undefined) {
-                    _o.maxMarker = o.maxMarker;
-                } else {
-                    _o.maxMarker = this.MAX_MARKER;
-                }
-
-                if (o.markerSize !== undefined) {
-                    _o.markerSize = o.markerSize;
-                } else {
-                    _o.markerSize = this.MARKER_SIZE;
+                if (Array.isArray(o.preData)){
+                    o.preDataURL = null;
+                    o.preData = o.preData;
+                } else if (o.preData !== undefined) { // should fetch
+                    o.preDataURL = o.preData;
+                    o.preData = [];
                 }
 
                 if (o.markerSpeed !== undefined) {
-                    _o.markerSpeed = parseInt(o.markerSpeed);
-                } else {
-                    _o.markerSpeed = this.MARKER_SPEED;
+                    o.markerSpeed = parseInt(o.markerSpeed);
                 }
-
-                _o.additionalOptions = o.additionalOptions;
-
-                return _o;
             },
 
             connect_to_data_source: function() {
@@ -284,9 +244,8 @@
                 this.regionhits = {};
                 this.regionhitsMax = 10;
 
-                this.parseOptions = function(options) {
+                this.validateOptions = function(options) {
                     this._options = options;
-
                     this.vectorMapContainer = this._options.container.find('.jvectormap-container');
                 };
 
@@ -314,18 +273,20 @@
                 }
 
                 this.marker_animation = function(x, y, markerNum) {
-                    var markerColor = this._options.dotColor;
+                    let offset = 0;
+                    let margin = -(this._options.markerSize/2);
                     this.vectorMapContainer.append(
                         $('<div class="marker_animation"></div>')
-                        .css({'left': x-15 + 'px'}) /* HACK to center the effect */
-                        .css({'top': y-15 + 'px'})
-                        .css({ 'background-color': markerColor })
+                        .css({'left': x-offset + 'px'}) /* HACK to center the effect */
+                        .css({'top': y-offset + 'px'})
+                        .css({ 'background-color': this._options.markerColor })
                         .animate({
                             opacity: 0,
                             scale: 1,
                             height: this._options.markerSize+'px',
-                            width:this._options.markerSize+'px',
-                            margin: '-25px'
+                            width: this._options.markerSize+'px',
+                            // margin: '-25px'
+                            margin: margin+'px'
                         }, this._options.markerSpeed, 'linear', function(){$(this).remove(); })
                     );
                 }

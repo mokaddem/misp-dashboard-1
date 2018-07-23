@@ -11,19 +11,25 @@
 
         // leaflet_widget object
         var Leaflet_widget = function (container, options) {
-            this.OSMURL='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-            this.POLLING_FREQUENCY = 5;
-
+            this._default_options = {
+                osmurl: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                pollingFrequency: 5000,
+                maxRotation: 10,
+                rotationWaitTime: 15000,
+                zoomLevel: 7,
+            }
             options.container = container;
             this._options = {};
 
-            this.parseOptions(options);
+            this.validateOptions(options);
+            this._options = $.extend({}, this._default_options, options);
+
             this.myOpenStreetMap = L.map(container).setView([0, 0], 1);
-            this.osm = new L.TileLayer(this.OSMURL, {minZoom: 0, maxZoom: 18}).addTo(this.myOpenStreetMap);
+            this.osm = new L.TileLayer(this._options.osmurl, {minZoom: 0, maxZoom: 18}).addTo(this.myOpenStreetMap);
 
             // add status led
             this._ev_timer = null;
-            this._ev_retry_frequency = this.POLLING_FREQUENCY; // sec
+            this._ev_retry_frequency = this._options.pollingFrequency; // sec
             this._cur_ev_retry_count = 0;
             this._ev_retry_count_thres = 3;
             var led_container = $('<div class="led-container" style="margin-right: 10px; float: right;"></div>');
@@ -39,7 +45,7 @@
 
             this.data_source;
             this.mapEventManager = new this.MapEventManager(this.myOpenStreetMap);
-            this.mapEventManager.parseOptions(this._options);
+            this.mapEventManager.validateOptions(this._options);
 
             // display (and fetch if needed) existing data
             var that = this;
@@ -50,17 +56,17 @@
                         url: this._options.preDataURL,
                         data: this._options.additionalOptions,
                         success: function(data) {
-                            that.preData = data;
+                            that._options.preData = data;
                         },
                         error: function(jqXHR, textStatus, errorThrown) {
                             console.log(textStatus);
-                            that.preData = [];
+                            that._options.preData = [];
                         }
                     })
                 ).then(
                     function() { // success
                         // add data to the widget
-                        that.preData.forEach(function(j) {
+                        that._options.preData.forEach(function(j) {
                             var marker = L.marker([j.coord.lat, j.coord.lon]).addTo(that.myOpenStreetMap);
                             var mapEvent = new that.MapEvent(j, marker);
                             that.mapEventManager.addMapEvent(mapEvent, true);
@@ -74,6 +80,12 @@
                     }
                 );
             } else {
+                // add data to the widget
+                that._options.preData.forEach(function(j) {
+                    var marker = L.marker([j.coord.lat, j.coord.lon]).addTo(that.myOpenStreetMap);
+                    var mapEvent = new that.MapEvent(j, marker);
+                    that.mapEventManager.addMapEvent(mapEvent, true);
+                });
                 // Subscribe to the flask eventStream
                 this.connect_to_data_source();
             }
@@ -82,52 +94,27 @@
         Leaflet_widget.prototype = {
             constructor: Leaflet_widget,
 
-            parseOptions: function(options) {
-                var _o = this._options;
+            validateOptions: function(options) {
                 var o = options;
 
-                if (o.endpoint !== undefined && typeof o.endpoint == 'string') {
-                    _o.endpoint = o.endpoint;
-                } else {
-                    throw "Leaftlet must have a valid endpoint";
+                if (o.endpoint === undefined || typeof o.endpoint != 'string') {
+                    throw "Map must have a valid endpoint";
                 }
 
-                _o.pollingFrequency = o.pollingFrequency !== undefined ? o.pollingFrequency*1000 : this.POLLING_FREQUENCY;
-                _o.name = o.name !== undefined ? o.name : "unnamed led";
-
-                if (o.container !== undefined) {
-                    _o.container = o.container instanceof jQuery ? o.container : $('#'+o.container);
+                if (o.container === undefined) {
+                    throw "Map must have a container";
                 } else {
-                    throw "LeafLet must have a container";
+                    o.container = o.container instanceof jQuery ? o.container : $('#'+o.container);
                 }
 
                 // pre-data is either the data to be shown or an URL from which the data should be taken from
-                if (o.preData !== undefined) {
-                    if (Array.isArray(o.preData)){
-                        _o.preDataURL = null;
-                        _o.preData = o.preData;
-                    } else { // should fetch
-                        _o.preDataURL = o.preData;
-                        _o.preData = [];
-                    }
-                } else { // no preData
-                    _o.preDataURL = null;
-                    _o.preData = [];
+                if (Array.isArray(o.preData)){
+                    o.preDataURL = null;
+                    o.preData = o.preData;
+                } else if (o.preData !== undefined) { // should fetch
+                    o.preDataURL = o.preData;
+                    o.preData = [];
                 }
-
-                if (o.maxRotation !== undefined) {
-                    _o.maxRotation = o.maxRotation;
-                }
-                if (o.rotationWaitTime !== undefined) {
-                    _o.rotationWaitTime = o.rotationWaitTime;
-                }
-                if (o.zoomLevel !== undefined) {
-                    _o.zoomLevel = o.zoomLevel;
-                }
-
-                _o.additionalOptions = o.additionalOptions;
-
-                return _o;
             },
 
             connect_to_data_source: function() {
@@ -220,9 +207,6 @@
 
             MapEventManager: function (myOpenStreetMap) {
                 var that = this;
-                this.MAX_ROTATION = 10;
-                this.ROTATION_WAIT_TIME = 15000;
-                this.ZOOM_LEVEL = 7;
 
                 this.myOpenStreetMap = myOpenStreetMap;
                 this._mapEventArray = [];
@@ -230,25 +214,10 @@
                 this._nextEventToShow = 0;
                 this._first_map = true;
                 this._coordSet = new Set();
-                //current lat and lon shown in worldMap
-                this._latToPing;
-                this._lonToPing;
-                //Markers on the worldMap
-                this._allMarkers = [];
-                this._curMarkerNum = 0;
-                //use for cancelTimeout
-                this._timeoutRotate;
+                this._timeoutRotate; // use for cancelTimeout
 
-                this.parseOptions = function(options) {
-                    if (options.maxRotation !== undefined) {
-                        this.MAX_ROTATION = options.maxRotation;
-                    }
-                    if (options.rotationWaitTime !== undefined) {
-                        this.ROTATION_WAIT_TIME = options.rotationWaitTime;
-                    }
-                    if (options.zoomLevel !== undefined) {
-                        this.ZOOM_LEVEL = options.zoomLevel;
-                    }
+                this.validateOptions = function(options) {
+                    this._options = options;
                 };
 
                 this.addMapEvent = function(mapevent, doNotRotate) {
@@ -291,7 +260,7 @@
                     return this._currentMapEvent;
                 };
 
-                // Perform the roration of the map in the openStreetMap pannel
+                // Perform the rotation of the map in the openStreetMap pannel
                 this.rotateMap = function(mapEvent) {
                     var that = this;
                     clearTimeout(this._timeoutRotate); //cancel current map rotation
@@ -299,19 +268,19 @@
                         var mapEvent = this.getNextEventToShow();
                     }
                     var marker = mapEvent.marker;
-                    this.myOpenStreetMap.flyTo([mapEvent.coord.lat, mapEvent.coord.lon], this.ZOOM_LEVEL);
+                    this.myOpenStreetMap.flyTo([mapEvent.coord.lat, mapEvent.coord.lon], that._options.zoomLevel);
                     mapEvent.marker.bindPopup(mapEvent.textMarker).openPopup();
 
                     $("#textMap1").text(mapEvent.text);
-                    if(this.ROTATION_WAIT_TIME != 0) {
-                        this._timeoutRotate = setTimeout(function(){ that.rotateMap(); }, this.ROTATION_WAIT_TIME);
+                    if(this._options.rotationWaitTime != 0) {
+                        this._timeoutRotate = setTimeout(function(){ that.rotateMap(); }, that._options.rotationWaitTime);
                     }
                 };
 
                 this.directZoom = function() {
                     var mapEvent = this.getCurrentMapEvent();
                     if (mapEvent != undefined)
-                        this.myOpenStreetMap.flyTo([mapEvent.coord.lat, mapEvent.coord.lon], this.ZOOM_LEVEL);
+                        this.myOpenStreetMap.flyTo([mapEvent.coord.lat, mapEvent.coord.lon], that._options.zoomLevel);
                 };
             }
         }
