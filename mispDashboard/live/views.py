@@ -9,7 +9,7 @@ def index():
     return render_template('index.html',
             widgetsConfig={
                 'live_led': generateWidgetConfig('led', 'http://localhost:5004/led', name='Status led', pollingFrequency=2),
-                'live_widget1': generateWidgetConfig('leaflet', 'http://localhost:5004/maps_stream', name='Live map',
+                'live_widget1': generateWidgetConfig('map', 'http://localhost:5004/maps_stream', name='Live map',
                     preData='http://localhost:5004/maps', zoomLevel=3),
                 'live_widget2': generateWidgetConfig('worldmap', 'http://localhost:5004/maps_stream2', name='World map',
                     preData='http://localhost:5004/maps'),

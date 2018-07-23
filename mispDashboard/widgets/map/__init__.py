@@ -1,7 +1,7 @@
 from flask import Blueprint
 
-leaflet = Blueprint(
-    'leaflet',
+map = Blueprint(
+    'map',
     __name__,
     template_folder='templates',
     static_folder='static',

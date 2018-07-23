@@ -5,12 +5,6 @@ data-widgetName="{{ widgetsConfig.name }}"
 data-config='{{ widgetsConfig | tojson }}'
 ></div>
 
-<div id="wrapper">
-    {% block widget_type %}
-    {% endblock %}
-</div>
-<!-- /#wrapper -->
-
 
 {% for js in js_deps %}
     <script src="{{ url_for('static', filename='js/'+js, _external=True) }}"></script>
