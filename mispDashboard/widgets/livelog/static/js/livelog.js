@@ -11,7 +11,7 @@
 
         // Livelog object
         var Livelog = function(container, options) {
-            this.POLLING_FREQUENCY = 3000; // 3s
+            this.POLLING_FREQUENCY = 5; // 3s
             this.MAX_TABLE_ENTRIES = 20;
 
             options.container = container;
@@ -47,7 +47,7 @@
 
             // add status led
             this._ev_timer = null;
-            this._ev_retry_frequency = 5; // sec
+            this._ev_retry_frequency = this.POLLING_FREQUENCY; // sec
             this._cur_ev_retry_count = 0;
             this._ev_retry_count_thres = 3;
             var led_container = $('<div class="led-container" style="margin-left: 10px;"></div>');

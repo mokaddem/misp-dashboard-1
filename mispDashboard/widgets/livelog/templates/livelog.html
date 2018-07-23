@@ -1,15 +1,15 @@
 {% extends "base_widget.html" %}
 
 {% block additional_deps %}
-<script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
-<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+<script src="{{ url_for('static', filename='js/bootstrap.js', _external=True) }}"></script>
+<link href="{{ url_for('static', filename='css/bootstrap.min.css', _external=True) }}" rel="stylesheet">
 
-<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js') }}"></script>
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css') }}">
+<script src="{{ url_for('static', filename='js/jquery.dataTables.min.js', _external=True) }}"></script>
+<script src="{{ url_for('static', filename='js/dataTables.bootstrap.min.js', _external=True) }}"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/dataTables.bootstrap.min.css', _external=True) }}">
 
-<script src="{{ url_for('livelog.static', filename='js/livelog.js') }}"></script>
-<link rel="stylesheet" type="text/css" href="{{ url_for('livelog.static', filename='css/livelog.css') }}">
+<script src="{{ url_for('livelog.static', filename='js/livelog.js', _external=True) }}"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('livelog.static', filename='css/livelog.css', _external=True) }}">
 {% endblock %}
 
 {% block additional_javascript %}

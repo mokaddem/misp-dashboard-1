@@ -11,6 +11,9 @@
 
         // punchcard object
         var Punchcard_widget = function (container, options) {
+            this.SINGULAR = 'login';
+            this.PLURAL = 'logins';
+
             options.container = container;
             this._options = {};
             this.myPunchcard;
@@ -25,8 +28,8 @@
                         "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
                     ],
                     responsive: false,
-                    singular: 'login',
-                    plural: 'logins',
+                    singular: that._options.singular,
+                    plural: that._options.plural,
                     timezones: ['local'],
                     timezoneIndex:0,
                     responsive: that._options.responsive
@@ -58,6 +61,18 @@
 
                 if (o.responsive !== undefined) {
                     _o.responsive = o.responsive;
+                }
+
+                if (o.singular !== undefined) {
+                    _o.singular = o.singular;
+                } else {
+                    _o.singular = this.SINGULAR;
+                }
+
+                if (o.plural !== undefined) {
+                    _o.plural = o.plural;
+                } else {
+                    _o.plural = this.PLURAL;
                 }
 
                 _o.additionalOptions = o.additionalOptions;

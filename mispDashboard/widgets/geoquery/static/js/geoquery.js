@@ -13,20 +13,21 @@
         var Geoquery = function (container, options) {
             this.OSMURL='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
             this.POLLING_FREQUENCY = 10000;
+            this.CIRCL_COLOR = 'red';
+
+            options.container = container;
+            this._options = {};
+            this.parseOptions(options);
 
             var circleRadiusOptions = {
-                color: 'red',
+                color: this._options.circlColor,
                 weight: 1,
-                fillColor: '#f03',
+                fillColor: this._options.circlColor,
                 fillOpacity: 0.4,
             };
             this.circleRadius;
             this.savedMarkers;
 
-            options.container = container;
-            this._options = {};
-
-            this.parseOptions(options);
             var dp_options = {
                 selectBackward: true,
                 showShortcuts: true,
@@ -89,7 +90,7 @@
                 }
 
                 _o.pollingFrequency = o.pollingFrequency !== undefined ? o.pollingFrequency*1000 : this.POLLING_FREQUENCY;
-                _o.name = o.name !== undefined ? o.name : "unnamed led";
+                _o.name = o.name !== undefined ? o.name : "unnamed geoquery";
 
                 if (o.container !== undefined) {
                     _o.container = o.container instanceof jQuery ? o.container : $('#'+o.container);
@@ -109,6 +110,12 @@
                 } else { // no preData
                     _o.preDataURL = null;
                     _o.preData = [];
+                }
+
+                if (o.circlColor !== undefined) {
+                    _o.circlColor = o.circlColor;
+                } else {
+                    _o.circlColor = this.CIRCL_COLOR;
                 }
 
                 _o.additionalOptions = o.additionalOptions;
@@ -200,26 +207,3 @@
         $.fn.geoquery.constructor = Geoquery;
 
     }));
-
-
-$(document).ready(function () {
-    $( "#rotation_wait_time_selector" ).change(function() {
-        var sel = parseInt($( this ).val());
-        if(isNaN(sel)) {
-            rotation_wait_time = 0;
-        } else {
-            rotation_wait_time = sel;
-        }
-        // var old = ROTATION_WAIT_TIME;
-        // ROTATION_WAIT_TIME = 1000*rotation_wait_time; //seconds
-        if(old == 0) {
-            mapEventManager._timeoutRotate = setTimeout(function(){ mapEventManager.rotateMap(); }, this.ROTATION_WAIT_TIME);
-        }
-    });
-
-    $( "#zoom_selector" ).change(function() {
-        var sel = parseInt($( this ).val());
-        // ZOOM_LEVEL = sel;
-        mapEventManager.directZoom();
-    });
-});

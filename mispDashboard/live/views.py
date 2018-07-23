@@ -18,12 +18,4 @@ def index():
                 'live_widget3': generateWidgetConfig('punchcard', 'http://localhost:5004/punchcard', name='Custom', pollingFrequency=2),
                 'live_widget4': generateWidgetConfig('livelog', 'http://localhost:5004/logs_stream', name='Live log',
                     preData='http://localhost:5004/logs', tableHeader=['timestamp', 'name', 'value', 'tag'], tableMaxEntries=10)
-            }
-            # itemToPlot=cfg.get('Dashboard', 'item_to_plot'),
-            # graph_log_refresh_rate=cfg.getint('Dashboard' ,'graph_log_refresh_rate'),
-            # char_separator=cfg.get('Dashboard', 'char_separator'),
-            # rotation_wait_time=cfg.getint('Dashboard' ,'rotation_wait_time'),
-            # max_img_rotation=cfg.getint('Dashboard' ,'max_img_rotation'),
-            # hours_spanned=cfg.getint('Dashboard' ,'hours_spanned'),
-            # zoomlevel=cfg.getint('Dashboard' ,'zoomlevel')
-            )
+            })
