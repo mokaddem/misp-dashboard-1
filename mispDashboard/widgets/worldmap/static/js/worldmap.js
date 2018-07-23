@@ -14,6 +14,9 @@
             this.POLLING_FREQUENCY = 5;
             this.DOT_COLOR = '#ffff66';
             this.SCALE_COLOR = ['#003FBF','#0063BF','#0087BF','#00ACBF','#00BFAD','#00BF89','#00BF64','#00BF40','#00BF1C','#08BF00','#2CBF00','#51BF00','#75BF00','#99BF00','#BEBF00','#BF9B00','#BF7700','#BF5200','#BF2E00','#BF0900'];
+            this.MAX_MARKER = 100;
+            this.MARKER_SIZE = 80;
+            this.MARKER_SPEED = 400; // ms
 
             options.container = container;
             this.connectionState = 'not connected';
@@ -161,6 +164,24 @@
                     _o.scaleColor = this.SCALE_COLOR;
                 }
 
+                if (o.maxMarker !== undefined) {
+                    _o.maxMarker = o.maxMarker;
+                } else {
+                    _o.maxMarker = this.MAX_MARKER;
+                }
+
+                if (o.markerSize !== undefined) {
+                    _o.markerSize = o.markerSize;
+                } else {
+                    _o.markerSize = this.MARKER_SIZE;
+                }
+
+                if (o.markerSpeed !== undefined) {
+                    _o.markerSpeed = parseInt(o.markerSpeed);
+                } else {
+                    _o.markerSpeed = this.MARKER_SPEED;
+                }
+
                 _o.additionalOptions = o.additionalOptions;
 
                 return _o;
@@ -254,11 +275,8 @@
 
             MapEventManager: function (openStreetMapObj) {
                 var that = this;
-                this.MAX_MARKER = 100;
 
                 this.openStreetMapObj = openStreetMapObj;
-                this._mapEventArray = [];
-                this._coordSet = new Set();
                 //Markers on the worldMap
                 this._allMarkers = [];
                 this._curMarkerNum = 0;
@@ -267,33 +285,13 @@
                 this.regionhitsMax = 10;
 
                 this.parseOptions = function(options) {
-                    if (options.maxMarker !== undefined) {
-                        this.MAX_MARKER = options.maxMarker;
-                    }
-
                     this._options = options;
 
                     this.vectorMapContainer = this._options.container.find('.jvectormap-container');
                 };
 
                 this.addMapEvent = function(mapevent) {
-                    if(this.getNumberOfEvent() >= this.MAX_ROTATION) {
-                        var toDel = this._mapEventArray[0];
-                        this._coordSet.delete(toDel.text);
-                        this._mapEventArray = this._mapEventArray.slice(1);
-                    }
-
-                    if(!this._coordSet.has(mapevent.text)) { // avoid duplicate map
-                        this._mapEventArray.push(mapevent);
-                        this._coordSet.add(mapevent.text);
-                        this.popupCoord(mapevent.coord, mapevent.regionCode);
-                    } else {
-                        //console.log('Duplicate coordinates');
-                    }
-                };
-
-                this.getNumberOfEvent = function() {
-                    return this._mapEventArray.length
+                    this.popupCoord(mapevent.coord, mapevent.regionCode);
                 };
 
                 this.popupCoord = function(coord, regionCode) {
@@ -306,8 +304,8 @@
                         this.marker_animation(pnts.x, pnts.y, this._curMarkerNum);
                         this.update_region(regionCode);
 
-                        this._curMarkerNum = this._curMarkerNum >= this.MAX_MARKER ? 0 : this._curMarkerNum+1;
-                        if (this._allMarkers.length >= this.MAX_MARKER) {
+                        this._curMarkerNum = this._curMarkerNum >= this._options.maxMarker ? 0 : this._curMarkerNum+1;
+                        if (this._allMarkers.length >= this._options.maxMarker) {
                             var to_remove = this._allMarkers[0];
                             this.openStreetMapObj.removeMarkers([to_remove]);
                             this._allMarkers = this._allMarkers.slice(1);
@@ -316,13 +314,19 @@
                 }
 
                 this.marker_animation = function(x, y, markerNum) {
-                    var markerColor = this.openStreetMapObj.markers[markerNum].element.config.style.current.fill;
+                    var markerColor = this._options.dotColor;
                     this.vectorMapContainer.append(
                         $('<div class="marker_animation"></div>')
                         .css({'left': x-15 + 'px'}) /* HACK to center the effect */
                         .css({'top': y-15 + 'px'})
                         .css({ 'background-color': markerColor })
-                        .animate({ opacity: 0, scale: 1, height: '80px', width:'80px', margin: '-25px' }, 400, 'linear', function(){$(this).remove(); })
+                        .animate({
+                            opacity: 0,
+                            scale: 1,
+                            height: this._options.markerSize+'px',
+                            width:this._options.markerSize+'px',
+                            margin: '-25px'
+                        }, this._options.markerSpeed, 'linear', function(){$(this).remove(); })
                     );
                 }
 
