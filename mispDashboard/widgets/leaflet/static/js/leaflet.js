@@ -26,15 +26,15 @@
             this._ev_retry_frequency = 5; // sec
             this._cur_ev_retry_count = 0;
             this._ev_retry_count_thres = 3;
-            var led_container = $('<div class="led-container" style="margin-left: 10px;"></div>');
+            var led_container = $('<div class="led-container" style="margin-right: 10px; float: right;"></div>');
             var led = $('<div class="led-small led_red"></div>');
             this.statusLed = led;
             led_container.append(led);
             var header = this._options.container.parent().parent().find('.panel-heading');
             if (header.length > 0) { // add in panel header
                 header.append(led_container);
-            } else { // add over the map
-                this._options.container.append(led_container);
+            } else { // add over the map in the correct container
+                this._options.container.find('div.leaflet-top.leaflet-right').append(led_container);
             }
 
             this.data_source;

@@ -21,6 +21,14 @@
     border-radius: 50%;
 }
 
+.led-small {
+    margin: auto auto;
+    margin-top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
 .led-container {
     text-align: center;
     display: inline-block;

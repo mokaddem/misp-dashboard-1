@@ -58,7 +58,8 @@
             if (header.length > 0) { // add in panel header
                 header.append(led_container);
             } else { // add over the map
-                this._options.container.append(led_container);
+                led_container.attr('style', 'position: absolute; z-index: 1000; right: 15px;'); // overwrite style
+                this._options.container.prepend(led_container);
             }
 
             this.data_source;

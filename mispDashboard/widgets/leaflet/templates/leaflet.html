@@ -1,11 +1,11 @@
 {% extends "base_widget.html" %}
 
 {% block additional_deps %}
-<script src="{{ url_for('static', filename='js/leaflet.js') }}"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/leaflet.css') }}">
+<script src="{{ url_for('static', filename='js/leaflet.js', _external=True) }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/leaflet.css', _external=True) }}">
 
-<script src="{{ url_for('leaflet.static', filename='js/leaflet.js') }}"></script>
-<link rel="stylesheet" type="text/css" href="{{ url_for('leaflet.static', filename='css/leaflet.css') }}">
+<script src="{{ url_for('leaflet.static', filename='js/leaflet.js', _external=True) }}"></script>
+<link rel="stylesheet" type="text/css" href="{{ url_for('leaflet.static', filename='css/leaflet.css', _external=True) }}">
 {% endblock %}
 
 {% block additional_javascript %}

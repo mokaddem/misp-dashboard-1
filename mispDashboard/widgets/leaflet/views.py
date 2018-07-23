@@ -2,8 +2,10 @@
 from . import leaflet
 from flask import Flask, render_template, request, Response, jsonify
 from mispDashboard.util import generateWidgetConfig
+from flask_cors import cross_origin
 
 
+@cross_origin()
 @leaflet.route("/")
 def leaflet():
     kargs = {}

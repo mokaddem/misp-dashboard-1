@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 from .live import live
 from .widgets.base import baseWidget
 from .widgets.led import led
@@ -9,6 +10,7 @@ from .widgets.livelog import livelog
 from .widgets.punchcard import punchcard
 
 app = Flask(__name__)
+CORS(app)
 
 # Register blueprints
 app.register_blueprint(live)

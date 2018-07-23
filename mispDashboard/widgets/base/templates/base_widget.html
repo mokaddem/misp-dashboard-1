@@ -13,10 +13,10 @@ data-config='{{ widgetsConfig | tojson }}'
 
 
 {% for js in js_deps %}
-    <script src="{{ url_for('static', filename='js/'+js) }}"></script>
+    <script src="{{ url_for('static', filename='js/'+js, _external=True) }}"></script>
 {% endfor %}
 {% for css in css_deps %}
-    <link href="{{ url_for('static', filename='css/'+css) }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/'+css, _external=True) }}" rel="stylesheet">
 {% endfor %}
 
 {% block additional_deps %}
