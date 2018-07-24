@@ -4,6 +4,15 @@ from flask import Flask, render_template, request, Response, jsonify
 from mispDashboard.util import generateWidgetConfig
 
 
+"""Options:
+Required:
+    - endpoint
+    - container
+
+Optional:
+    - pollingFrequency: 3000 // ms
+    - stateDownThreshold: 15000 // ms
+"""
 @led.route("/")
 def led():
     kargs = {}

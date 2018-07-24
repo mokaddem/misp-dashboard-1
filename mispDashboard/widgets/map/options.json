@@ -1,0 +1,38 @@
+"options": [
+    {
+        "type": "text",
+        "name": "osmurl",
+        "default": "",
+        "placeholder": "osm URL",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "A valid osm URL"
+    },
+    {
+        "type": "number",
+        "name": "maxRotation",
+        "placeholder": "10",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Polling frequency",
+        "help_text": "Frequency at which the widget will check if the endpoint is up"
+    },
+    {
+        "type": "number",
+        "name": "rotationWaitTime",
+        "placeholder": "15000 ms",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Max number of marker",
+        "help_text": "Maximum number of marker drawn in the map"
+    },
+    {
+        "type": "number",
+        "name": "zoomLevel",
+        "placeholder": "[0-13]",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Max number of marker",
+        "help_text": "Maximum number of marker drawn in the map"
+    }
+]

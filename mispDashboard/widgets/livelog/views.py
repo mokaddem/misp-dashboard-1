@@ -4,6 +4,18 @@ from flask import Flask, render_template, request, Response, jsonify
 from mispDashboard.util import generateWidgetConfig
 
 
+"""Options:
+Required:
+    - endpoint
+    - container
+
+Optional:
+    - preData
+    - pollingFrequency // ms
+    - maxTableEntries
+    - tableHeader
+    - tableMaxEntries
+"""
 @livelog.route("/")
 def livelog():
     kargs = {}

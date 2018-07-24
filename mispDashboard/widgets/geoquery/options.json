@@ -1,0 +1,19 @@
+"options": [
+    {
+        "type": "text",
+        "name": "osmurl",
+        "default": "",
+        "placeholder": "osm URL",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "A valid osm URL"
+    },
+    {
+        "type": "text",
+        "name": "circleColor",
+        "placeholder": "#ffff66, red",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "The circle' color"
+    }
+]

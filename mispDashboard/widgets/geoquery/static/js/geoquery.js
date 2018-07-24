@@ -11,18 +11,19 @@
 
         // geoquery object
         var Geoquery = function (container, options) {
-            this.OSMURL='http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-            this.POLLING_FREQUENCY = 10000;
-            this.CIRCL_COLOR = 'red';
+            this._default_options = {
+                osmurl: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                circleColor: 'red'
+            }
 
             options.container = container;
-            this._options = {};
-            this.parseOptions(options);
+            this.validateOptions(options);
+            this._options = $.extend({}, this._default_options, options);
 
             var circleRadiusOptions = {
-                color: this._options.circlColor,
+                color: this._options.circleColor,
                 weight: 1,
-                fillColor: this._options.circlColor,
+                fillColor: this._options.circleColor,
                 fillOpacity: 0.4,
             };
             this.circleRadius;
@@ -42,7 +43,7 @@
             var that = this;
 
             this.myOpenStreetMap = L.map(container).setView([0, 0], 1);
-            this.osm = new L.TileLayer(this.OSMURL, {minZoom: 0, maxZoom: 18}).addTo(this.myOpenStreetMap);
+            this.osm = new L.TileLayer(this._options.osmurl, {minZoom: 0, maxZoom: 18}).addTo(this.myOpenStreetMap);
             circleRadiusOptions.radius = this.getScale(this.myOpenStreetMap.getZoom());
             this.circleRadius = L.circle(this.myOpenStreetMap.getCenter(), circleRadiusOptions)
                                     .addTo(this.myOpenStreetMap);
@@ -79,48 +80,18 @@
         Geoquery.prototype = {
             constructor: Geoquery,
 
-            parseOptions: function(options) {
-                var _o = this._options;
+            validateOptions: function(options) {
                 var o = options;
 
-                if (o.endpoint !== undefined && typeof o.endpoint == 'string') {
-                    _o.endpoint = o.endpoint;
+                if (o.endpoint === undefined || typeof o.endpoint != 'string') {
+                    throw "Worldmap must have a valid endpoint";
+                }
+
+                if (o.container === undefined) {
+                    throw "Worldmap must have a container";
                 } else {
-                    throw "Geoquery must have a valid endpoint";
+                    o.container = o.container instanceof jQuery ? o.container : $('#'+o.container);
                 }
-
-                _o.pollingFrequency = o.pollingFrequency !== undefined ? o.pollingFrequency*1000 : this.POLLING_FREQUENCY;
-                _o.name = o.name !== undefined ? o.name : "unnamed geoquery";
-
-                if (o.container !== undefined) {
-                    _o.container = o.container instanceof jQuery ? o.container : $('#'+o.container);
-                } else {
-                    throw "Geoquery must have a container";
-                }
-
-                // pre-data is either the data to be shown or an URL from which the data should be taken from
-                if (o.preData !== undefined) {
-                    if (Array.isArray(o.preData)){
-                        _o.preDataURL = null;
-                        _o.preData = o.preData;
-                    } else { // should fetch
-                        _o.preDataURL = o.preData;
-                        _o.preData = [];
-                    }
-                } else { // no preData
-                    _o.preDataURL = null;
-                    _o.preData = [];
-                }
-
-                if (o.circlColor !== undefined) {
-                    _o.circlColor = o.circlColor;
-                } else {
-                    _o.circlColor = this.CIRCL_COLOR;
-                }
-
-                _o.additionalOptions = o.additionalOptions;
-
-                return _o;
             },
 
             getScale: function(zoom) {

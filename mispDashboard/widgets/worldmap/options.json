@@ -1,0 +1,63 @@
+"options": [
+    {
+        "type": "text",
+        "name": "preData",
+        "default": "",
+        "placeholder": "JSON or URL",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Data populating the widget"
+    },
+    {
+        "type": "number",
+        "name": "pollingFrequency",
+        "placeholder": "5000 ms",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Polling frequency",
+        "help_text": "Frequency at which the widget will check if the endpoint is up"
+    },
+    {
+        "type": "number",
+        "name": "maxMarker",
+        "placeholder": "100",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Max number of marker",
+        "help_text": "Maximum number of marker drawn in the map"
+    },
+    {
+        "type": "text",
+        "name": "markerColor",
+        "placeholder": "#ffff66, red",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "The markers' color"
+    },
+    {
+        "type": "number",
+        "name": "markerSize",
+        "placeholder": "80 px",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Size of marker",
+        "help_text": "The marker's size"
+    },
+    {
+        "type": "number",
+        "name": "markerSpeed",
+        "placeholder": "600 ms",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Speed of marker",
+        "help_text": "The marker's animation speed"
+    },
+    {
+        "type": "text",
+        "name": "scaleColor",
+        "placeholder": "[#color1, #color2, ...]",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "A custom scale of color for the region"
+    }
+]

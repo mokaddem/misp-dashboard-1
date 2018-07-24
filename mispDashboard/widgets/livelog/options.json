@@ -1,0 +1,37 @@
+"options": [
+    {
+        "type": "text",
+        "name": "preData",
+        "default": "",
+        "placeholder": "JSON or URL",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Data populating the widget"
+    },
+    {
+        "type": "number",
+        "name": "pollingFrequency",
+        "placeholder": "5000 ms",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Polling frequency",
+        "help_text": "Frequency at which the widget will check if the endpoint is up"
+    },
+    {
+        "type": "number",
+        "name": "maxTableEntries",
+        "placeholder": "10",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Max number of element",
+        "help_text": "Maximum number of element in the table"
+    },
+    {
+        "type": "text",
+        "name": "tableHeader",
+        "placeholder": "[header1, header2, ...]",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "The table's header"
+    }
+]

@@ -14,6 +14,8 @@
             this._default_options = {
                 pollingFrequency: 5000,
                 maxTableEntries: 20,
+                tableHeader: undefined,
+                tableMaxEntries: undefined,
             }
 
             options.container = container;

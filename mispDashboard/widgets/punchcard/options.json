@@ -1,0 +1,20 @@
+"options": [
+    {
+        "type": "text",
+        "name": "singular",
+        "default": "",
+        "placeholder": "login",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Singular word for a circle"
+    },
+    {
+        "type": "text",
+        "name": "plural",
+        "default": "",
+        "placeholder": "logins",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Plural word for a circle"
+    }
+]

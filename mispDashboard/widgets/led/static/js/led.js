@@ -14,7 +14,6 @@
             this._default_options = {
                 pollingFrequency: 3000,
                 stateDownThreshold: 15000,
-
             }
 
             options.container = container;

@@ -1,0 +1,20 @@
+"options": [
+    {
+        "type": "number",
+        "name": "pollingFrequency",
+        "placeholder": "3000 ms",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "Polling frequency",
+        "help_text": "Frequency at which the widget will check if the endpoint is up"
+    },
+    {
+        "type": "number",
+        "name": "stateDownThreshold",
+        "placeholder": "100",
+        "validator_regex": null,
+        "input_classes": ["form-control", "input-sm"],
+        "label": "State down threshold",
+        "help_text": "Time at which the remote is considered down"
+    }
+]

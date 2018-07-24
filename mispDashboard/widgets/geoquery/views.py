@@ -4,6 +4,15 @@ from flask import Flask, render_template, request, Response, jsonify
 from mispDashboard.util import generateWidgetConfig
 
 
+"""Options:
+Required:
+    - endpoint
+    - container
+
+Optional:
+    - circleColor
+    - osmurl
+"""
 @geoquery.route("/")
 def geoquery():
     kargs = {}

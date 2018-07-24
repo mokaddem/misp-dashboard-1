@@ -3,7 +3,20 @@ from . import worldmap
 from flask import Flask, render_template, request, Response, jsonify
 from mispDashboard.util import generateWidgetConfig
 
+"""Options:
+Required:
+    - endpoint
+    - container
 
+Optional:
+    - preData
+    - pollingFrequency // ms
+    - maxMarker
+    - markerColor
+    - markerSize // px
+    - markerSpeed // ms
+    - scaleColor
+"""
 @worldmap.route("/")
 def worldmap():
     kargs = {}

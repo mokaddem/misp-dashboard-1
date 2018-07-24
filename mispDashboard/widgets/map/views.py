@@ -5,6 +5,18 @@ from mispDashboard.util import generateWidgetConfig
 from flask_cors import cross_origin
 
 
+"""Options:
+Required:
+    - endpoint
+    - container
+
+Optional:
+    - pollingFrequency // ms
+    - osmurl
+    - maxRotation
+    - rotationWaitTime // ms
+    - zoomLevel
+"""
 @cross_origin()
 @map.route("/")
 def map():
