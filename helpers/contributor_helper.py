@@ -159,7 +159,7 @@ class Contributor_helper:
         self.serv_redis_db.sadd(self.keyAllOrg, org)
 
         keyname = "{}:{}".format(self.keyLastContrib, util.getDateStrFormat(now))
-        self.serv_redis_db.zadd(keyname, {org: nowSec})
+        self.serv_redis_db.zadd(keyname, **{org: nowSec})
         self.logger.debug('Added to redis: keyname={}, nowSec={}, org={}'.format(keyname, nowSec, org))
         self.serv_redis_db.expire(keyname, util.ONE_DAY*7) #expire after 7 day
 
@@ -168,7 +168,7 @@ class Contributor_helper:
         for award in awards_given:
             # update awards given
             keyname = "{}:{}".format(self.keyLastAward, util.getDateStrFormat(now))
-            self.serv_redis_db.zadd(keyname, {json.dumps({'org': org, 'award': award, 'epoch': nowSec }): nowSec})
+            self.serv_redis_db.zadd(keyname, **{json.dumps({'org': org, 'award': award, 'epoch': nowSec }): nowSec})
             self.logger.debug('Added to redis: keyname={}, nowSec={}, content={}'.format(keyname, nowSec, json.dumps({'org': org, 'award': award, 'epoch': nowSec })))
             self.serv_redis_db.expire(keyname, util.ONE_DAY*7) #expire after 7 day
             # publish

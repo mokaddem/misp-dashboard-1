@@ -45,7 +45,7 @@ class Users_helper:
         timestampDate_str = util.getDateStrFormat(timestampDate)
 
         keyname_timestamp = "{}:{}".format(self.keyTimestamp, org)
-        self.serv_redis_db.zadd(keyname_timestamp, {timestamp: timestamp})
+        self.serv_redis_db.zadd(keyname_timestamp, **{timestamp: timestamp})
         self.logger.debug('Added to redis: keyname={}, org={}'.format(keyname_timestamp, timestamp))
 
         keyname_org = "{}:{}".format(self.keyOrgLog, timestampDate_str)
