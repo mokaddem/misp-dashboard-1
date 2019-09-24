@@ -80,3 +80,6 @@ path_countrycode_to_coord_JSON=./data/country_code_lat_long.json
 [RedisDB]
 db=2
 dbVersion=db_version
+
+[RedisLive]
+db=4
